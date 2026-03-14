@@ -7,4 +7,8 @@ export default defineConfig({
       include: '**/*.{jsx,js,tsx,ts}',
     }),
   ],
+  base: '/genba',
+  build: {
+    outDir: 'dist'
+  }
 })
