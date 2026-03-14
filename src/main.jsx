@@ -2,7 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
-import { seedTestUsers } from './utils/seedTestUsers.js'
+// import { seedTestUsers } from './utils/seedTestUsers.js'
 
 // Initialize test users in development
 // seedTestUsers()
