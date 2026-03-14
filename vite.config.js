@@ -9,12 +9,17 @@ export default defineConfig({
   ],
   build: {
     outDir: 'dist',
-    assetsDir: 'assets'
+    assetsDir: 'assets',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore']
+        }
+      }
+    }
   },
   optimizeDeps: {
-    include: ['firebase/app', 'firebase/auth', 'firebase/firestore']
-  },
-  rollupOptions: {
-    external: ['tslib']
+    include: ['firebase/app', 'firebase/auth', 'firebase/firestore', 'tslib']
   }
 })
