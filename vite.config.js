@@ -7,8 +7,15 @@ export default defineConfig({
       include: '**/*.{jsx,js,tsx,ts}',
     }),
   ],
-  base: '/genba',
+  base: '/genba/',
   build: {
-    outDir: 'dist'
+    outDir: 'dist',
+    assetsDir: 'assets'
+  },
+  optimizeDeps: {
+    include: ['firebase/app', 'firebase/auth', 'firebase/firestore']
+  },
+  rollupOptions: {
+    external: ['tslib']
   }
 })

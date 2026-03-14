@@ -49,7 +49,7 @@ export default function Navigation() {
         <div className="gi-card mx-4 mt-4 p-4 border-l-4 border-gi-gold">
           <div className="flex items-start justify-between">
             <div className="flex items-center">
-              <img src="/genba/app-logo.png" alt="Genba Ikigai" className="w-8 h-8" />
+              <img src="/app-logo.png" alt="Genba Ikigai" className="w-8 h-8" />
               <span className="ml-3 text-xl font-light text-gi-white">Genba Ikigai</span>
             </div>
             <button onClick={handleNotificationClick} className="text-gi-horizon hover:text-gi-white">
