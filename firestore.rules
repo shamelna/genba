@@ -1,0 +1,56 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users can read/write their own documents
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      
+      // Subcollections - user can access their own data
+      match /checkins/{checkinId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+      
+      match /bus/{busId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+      
+      match /ikigai/{ikigaiId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+      
+      match /intentions/{intentionId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+    
+    // Admin-only access
+    match /admin/{adminId} {
+      allow read, write: if request.auth != null && 
+        request.auth.token.email in ['admin@genbatest.com'];
+    }
+    
+    match /admin/sentMessages/{messageId} {
+      allow read, write: if request.auth != null && 
+        request.auth.token.email in ['admin@genbatest.com'];
+    }
+    
+    // Email templates - admin write, extension read
+    match /emailTemplates/{templateId} {
+      allow write: if request.auth != null && 
+        request.auth.token.email in ['admin@genbatest.com'];
+      allow read: if true; // Extension needs to read
+    }
+    
+    // Meta collection - for seeding flags
+    match /meta/{metaId} {
+      allow read: if true;
+      allow write: if request.auth != null && 
+        request.auth.token.email in ['admin@genbatest.com'];
+    }
+    
+    // Deny all other reads/writes
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

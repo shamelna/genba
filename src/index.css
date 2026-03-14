@@ -1,0 +1,88 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --gi-deep:     #1C2B3A;
+    --gi-slate:    #2E4156;
+    --gi-mist:     #4A6478;
+    --gi-horizon:  #7A9BB0;
+    --gi-stone:    #3D3530;
+    --gi-water:    #E8EFF5;
+    --gi-white:    #F4F7FA;
+    --gi-gold:     #FFD559;
+    --gi-ember:    #C0392B;
+    --surface-0:   #1C2B3A;
+    --surface-1:   #253545;
+    --surface-2:   #2E4156;
+    --surface-3:   #3A5269;
+  }
+
+  body {
+    background-color: #1C2B3A;
+    color: #F4F7FA;
+    font-family: 'Inter', 'SF Pro Display', system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  /* Primary button — gold accent */
+  .btn-primary {
+    @apply bg-gi-gold text-gi-deep font-semibold
+           px-6 py-3 rounded-gi
+           transition-opacity duration-200
+           hover:opacity-90 active:opacity-80;
+  }
+
+  /* Secondary button — outlined */
+  .btn-secondary {
+    @apply bg-transparent text-gi-white
+           border border-gi-mist
+           px-6 py-3 rounded-gi
+           transition-colors duration-200
+           hover:border-gi-horizon;
+  }
+
+  /* Danger button — Red Bus / errors only */
+  .btn-danger {
+    @apply bg-gi-ember text-gi-white font-semibold
+           px-6 py-3 rounded-gi
+           transition-opacity duration-200
+           hover:opacity-90;
+  }
+
+  /* Standard card */
+  .gi-card {
+    @apply bg-surface-1 border border-surface-3
+           rounded-gi shadow-gi-card;
+  }
+
+  /* Elevated card */
+  .gi-card-elevated {
+    @apply bg-surface-2 border border-surface-3
+           rounded-gi shadow-gi-deep;
+  }
+
+  /* Section label style */
+  .gi-label {
+    @apply text-gi-mist uppercase tracking-widest-md
+           text-xs font-medium;
+  }
+
+  /* Hero title style */
+  .gi-title {
+    @apply text-gi-white font-light tracking-widest-lg;
+  }
+  .gi-score-high {
+    @apply bg-green-700 text-white;
+  }
+  
+  .gi-score-medium {
+    @apply bg-yellow-700 text-white;
+  }
+  
+  .gi-score-low {
+    @apply bg-gi-ember text-white;
+  }
+}
