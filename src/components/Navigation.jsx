@@ -1,23 +1,37 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import { useUserTier } from '../contexts/UserTierContext';
 import { useNotif } from '../contexts/NotifContext';
 
 export default function Navigation() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { canAccessCompass, isAdmin } = useUserTier();
+  const { currentUser } = useAuth();
+  const { canAccessCompass, isAdmin, isPremium } = useUserTier();
   const { unreadNotification, markNotificationAsRead } = useNotif();
+
+  // Case Study nav item — active if path starts with /case-study
+  const isCaseStudyActive = location.pathname.startsWith('/case-study');
 
   const navItems = [
     { path: '/home', label: 'Home', icon: '🏠' },
     { path: '/checkin', label: 'Check-in', icon: '✓' },
+    // Case Study — only for Basic (non-premium) users who have completed onboarding
+    ...(!isPremium
+      ? [{
+          path: '/case-study/introduction',
+          label: 'Case Study',
+          icon: '📖',
+          activeOverride: isCaseStudyActive,
+        }]
+      : []),
     { path: '/progress', label: 'Progress', icon: '📊' },
-    { 
-      path: '/compass', 
-      label: 'Compass', 
+    {
+      path: '/compass',
+      label: 'Compass',
       icon: '🧭',
-      disabled: !canAccessCompass 
+      disabled: !canAccessCompass
     },
     { path: '/journal', label: 'Journal', icon: '📔' },
     { path: '/settings', label: 'Settings', icon: '⚙️' },
@@ -63,7 +77,9 @@ export default function Navigation() {
       <nav className="fixed bottom-0 left-0 right-0 bg-gi-deep border-t border-gi-slate z-50">
         <div className="flex justify-around items-center py-2">
           {navItems.map((item) => {
-            const isActive = location.pathname === item.path;
+            const isActive = item.activeOverride !== undefined
+              ? item.activeOverride
+              : location.pathname === item.path;
             const isDisabled = item.disabled;
             
             return (

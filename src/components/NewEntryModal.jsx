@@ -1,0 +1,642 @@
+import React, { useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import { caseStudies, MODULE_ORDER, MODULE_LABELS } from '../data/caseStudies';
+import {
+  saveGenbaMoment,
+  saveStopAndThinkReflection,
+  saveBaselineEntry,
+} from '../services/firestoreService';
+
+// ── Shared helpers ────────────────────────────────────────────────────────────
+
+function ModalShell({ onClose, children }) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center"
+      style={{ background: 'rgba(8,18,28,0.85)' }}
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div
+        className="w-full flex flex-col"
+        style={{
+          maxWidth: '680px',
+          maxHeight: '92vh',
+          background: '#1C2B3A',
+          borderRadius: '20px 20px 0 0',
+          boxShadow: '0 -8px 40px rgba(0,0,0,0.6)',
+          overflowY: 'auto',
+        }}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function ModalHeader({ title, subtitle, onBack, onClose }) {
+  return (
+    <div
+      className="flex items-center gap-3 px-5 py-4 flex-shrink-0"
+      style={{ borderBottom: '1px solid rgba(46,65,86,0.8)' }}
+    >
+      {onBack && (
+        <button
+          onClick={onBack}
+          className="text-gi-horizon hover:text-gi-white transition-colors w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gi-slate"
+        >
+          ←
+        </button>
+      )}
+      <div className="flex-1 min-w-0">
+        <p className="text-gi-white font-medium text-sm leading-tight">{title}</p>
+        {subtitle && <p className="text-gi-horizon text-xs mt-0.5">{subtitle}</p>}
+      </div>
+      <button
+        onClick={onClose}
+        className="text-gi-mist hover:text-gi-white transition-colors w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gi-slate text-lg leading-none"
+      >
+        ×
+      </button>
+    </div>
+  );
+}
+
+function SaveButton({ onClick, disabled, saving, label = 'Save entry' }) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled || saving}
+      className="w-full bg-gi-gold text-gi-deep font-semibold py-4 rounded-gi hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+    >
+      {saving ? 'Saving…' : label}
+    </button>
+  );
+}
+
+function SavedState({ label, onDone }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
+      <div className="text-4xl mb-4">✓</div>
+      <p className="text-gi-white font-medium mb-1">{label}</p>
+      <p className="text-gi-horizon text-sm mb-6">Your growth is being documented.</p>
+      <button
+        onClick={onDone}
+        className="border border-gi-gold/40 text-gi-gold px-6 py-2 rounded-gi hover:bg-gi-gold/10 transition-colors text-sm"
+      >
+        Back to journal
+      </button>
+    </div>
+  );
+}
+
+// ── Type Picker ───────────────────────────────────────────────────────────────
+
+const ENTRY_TYPES = [
+  {
+    id: 'genba-moment',
+    icon: '⬤',
+    iconColor: '#FFD559',
+    label: 'Genba Ikigai Moment',
+    description: 'Capture a real moment of leadership that connects to your Ikigai.',
+  },
+  {
+    id: 'stop-and-think',
+    icon: '◈',
+    iconColor: '#4AB3A0',
+    label: 'Reflection — Stop and Think',
+    description: 'Work through your weekly module prompts from the student workbook.',
+  },
+  {
+    id: 'baseline',
+    icon: '◎',
+    iconColor: '#A78BFA',
+    label: 'Baseline',
+    description: 'Rate yourself now and track how far you\'ve come.',
+  },
+];
+
+function TypePicker({ onSelect, onClose }) {
+  return (
+    <ModalShell onClose={onClose}>
+      <ModalHeader title="New Entry" subtitle="What would you like to capture?" onClose={onClose} />
+      <div className="flex flex-col gap-3 p-5 pb-8">
+        {ENTRY_TYPES.map(t => (
+          <button
+            key={t.id}
+            onClick={() => onSelect(t.id)}
+            className="text-left rounded-gi p-4 transition-all hover:opacity-90"
+            style={{
+              background: '#253545',
+              border: '1px solid rgba(74,100,120,0.5)',
+            }}
+          >
+            <div className="flex items-center gap-3 mb-1">
+              <span style={{ color: t.iconColor, fontSize: '18px' }}>{t.icon}</span>
+              <span className="text-gi-white font-medium text-sm">{t.label}</span>
+            </div>
+            <p className="text-gi-horizon text-xs leading-relaxed pl-8">{t.description}</p>
+          </button>
+        ))}
+      </div>
+    </ModalShell>
+  );
+}
+
+// ── Genba Ikigai Moment Form ──────────────────────────────────────────────────
+
+const IKIGAI_ZONES = [
+  { id: 'love-good', label: 'Love it & Good at it', color: '#F59E0B' },
+  { id: 'good-paid', label: 'Good at it & Can be paid', color: '#10B981' },
+  { id: 'paid-world', label: 'Paid & World needs it', color: '#3B82F6' },
+  { id: 'world-love', label: 'World needs it & Love it', color: '#8B5CF6' },
+];
+
+function GenbaMomentForm({ onClose, onSaved }) {
+  const { currentUser } = useAuth();
+  const [form, setForm] = useState({
+    situation: '',
+    noticed: '',
+    action: '',
+    learned: '',
+  });
+  const [zones, setZones] = useState([]);
+  const [saving, setSaving] = useState(false);
+
+  const set = (key, val) => setForm(f => ({ ...f, [key]: val }));
+  const toggleZone = (id) => setZones(z => z.includes(id) ? z.filter(x => x !== id) : [...z, id]);
+
+  const canSave = form.situation.trim() || form.learned.trim();
+
+  const handleSave = async () => {
+    if (!canSave) return;
+    setSaving(true);
+    try {
+      await saveGenbaMoment(currentUser.uid, {
+        situation: form.situation.trim(),
+        noticed: form.noticed.trim(),
+        action: form.action.trim(),
+        learned: form.learned.trim(),
+        ikigaiZones: zones,
+      });
+      onSaved();
+    } catch (err) {
+      console.error('Error saving Genba Moment:', err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <ModalShell onClose={onClose}>
+      <ModalHeader
+        title="Genba Ikigai Moment"
+        subtitle="Capture a real leadership moment"
+        onClose={onClose}
+      />
+      <div className="flex flex-col gap-5 p-5 pb-8">
+
+        {/* Situation */}
+        <div>
+          <label className="block text-gi-gold text-xs uppercase tracking-widest mb-2">
+            The situation
+          </label>
+          <textarea
+            value={form.situation}
+            onChange={e => set('situation', e.target.value)}
+            placeholder="Briefly describe what was happening…"
+            rows={2}
+            maxLength={500}
+            className="w-full bg-gi-deep text-gi-white text-sm rounded-gi px-4 py-3 leading-relaxed resize-none outline-none border border-gi-slate/60 focus:border-gi-gold/50 transition-colors placeholder-gi-mist/40"
+          />
+        </div>
+
+        {/* Noticed */}
+        <div>
+          <label className="block text-gi-horizon text-xs uppercase tracking-widest mb-2">
+            What you noticed
+          </label>
+          <textarea
+            value={form.noticed}
+            onChange={e => set('noticed', e.target.value)}
+            placeholder="What did you observe — about yourself, your team, the environment?"
+            rows={2}
+            maxLength={500}
+            className="w-full bg-gi-deep text-gi-white text-sm rounded-gi px-4 py-3 leading-relaxed resize-none outline-none border border-gi-slate/60 focus:border-gi-gold/50 transition-colors placeholder-gi-mist/40"
+          />
+        </div>
+
+        {/* Action */}
+        <div>
+          <label className="block text-gi-horizon text-xs uppercase tracking-widest mb-2">
+            What you did or tried
+          </label>
+          <textarea
+            value={form.action}
+            onChange={e => set('action', e.target.value)}
+            placeholder="How did you respond or lead in that moment?"
+            rows={2}
+            maxLength={500}
+            className="w-full bg-gi-deep text-gi-white text-sm rounded-gi px-4 py-3 leading-relaxed resize-none outline-none border border-gi-slate/60 focus:border-gi-gold/50 transition-colors placeholder-gi-mist/40"
+          />
+        </div>
+
+        {/* Learned */}
+        <div>
+          <label className="block text-gi-gold text-xs uppercase tracking-widest mb-2">
+            What you learned
+          </label>
+          <textarea
+            value={form.learned}
+            onChange={e => set('learned', e.target.value)}
+            placeholder="What insight or shift came out of this moment?"
+            rows={3}
+            maxLength={600}
+            className="w-full bg-gi-deep text-gi-white text-sm rounded-gi px-4 py-3 leading-relaxed resize-none outline-none border border-gi-slate/60 focus:border-gi-gold/50 transition-colors placeholder-gi-mist/40"
+          />
+        </div>
+
+        {/* Ikigai zone tags */}
+        <div>
+          <label className="block text-gi-horizon text-xs uppercase tracking-widest mb-2">
+            Which Ikigai zone does this touch? <span className="normal-case text-gi-mist">(optional)</span>
+          </label>
+          <div className="flex flex-col gap-2">
+            {IKIGAI_ZONES.map(z => (
+              <button
+                key={z.id}
+                type="button"
+                onClick={() => toggleZone(z.id)}
+                className="flex items-center gap-3 px-4 py-2.5 rounded-gi text-left text-sm transition-all"
+                style={{
+                  background: zones.includes(z.id) ? `${z.color}18` : 'transparent',
+                  border: `1px solid ${zones.includes(z.id) ? z.color : 'rgba(74,100,120,0.4)'}`,
+                  color: zones.includes(z.id) ? z.color : '#8BA0B2',
+                }}
+              >
+                <span
+                  className="w-4 h-4 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold"
+                  style={{
+                    background: zones.includes(z.id) ? z.color : 'transparent',
+                    border: `2px solid ${z.color}`,
+                    color: zones.includes(z.id) ? '#1C2B3A' : z.color,
+                  }}
+                >
+                  {zones.includes(z.id) ? '✓' : ''}
+                </span>
+                {z.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <SaveButton onClick={handleSave} disabled={!canSave} saving={saving} />
+      </div>
+    </ModalShell>
+  );
+}
+
+// ── Stop and Think Form ───────────────────────────────────────────────────────
+
+function StopAndThinkForm({ onClose, onSaved, initialModule }) {
+  const { currentUser } = useAuth();
+  const [moduleId, setModuleId] = useState(initialModule || 'introduction');
+  const [answers, setAnswers] = useState({});
+  const [freeText, setFreeText] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const study = caseStudies[moduleId];
+  const prompts = study?.stopAndThinkPrompts || [];
+
+  const setAnswer = (idx, val) => setAnswers(a => ({ ...a, [idx]: val }));
+  const canSave = Object.values(answers).some(v => v.trim()) || freeText.trim();
+
+  const handleSave = async () => {
+    if (!canSave) return;
+    setSaving(true);
+    try {
+      const promptAnswers = prompts.map((prompt, i) => ({
+        prompt,
+        answer: (answers[i] || '').trim(),
+      })).filter(p => p.answer);
+
+      await saveStopAndThinkReflection(currentUser.uid, {
+        moduleId,
+        moduleLabel: MODULE_LABELS[moduleId] || moduleId,
+        promptAnswers,
+        freeText: freeText.trim(),
+      });
+      onSaved();
+    } catch (err) {
+      console.error('Error saving Stop and Think:', err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <ModalShell onClose={onClose}>
+      <ModalHeader
+        title="Reflection — Stop and Think"
+        subtitle="Weekly workbook prompts"
+        onClose={onClose}
+      />
+      <div className="flex flex-col gap-5 p-5 pb-8">
+
+        {/* Module selector */}
+        <div>
+          <label className="block text-gi-gold text-xs uppercase tracking-widest mb-2">
+            Which module?
+          </label>
+          <select
+            value={moduleId}
+            onChange={e => { setModuleId(e.target.value); setAnswers({}); }}
+            className="w-full bg-gi-deep text-gi-white text-sm rounded-gi px-4 py-3 border border-gi-slate/60 outline-none focus:border-gi-gold/50 transition-colors"
+            style={{ appearance: 'none' }}
+          >
+            {MODULE_ORDER.map(id => (
+              <option key={id} value={id}>{MODULE_LABELS[id]}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Prompts */}
+        {prompts.length > 0 && (
+          <div className="flex flex-col gap-5">
+            <div
+              className="px-4 py-3 rounded-gi"
+              style={{ background: 'rgba(74,179,160,0.08)', border: '1px solid rgba(74,179,160,0.2)' }}
+            >
+              <p className="text-xs text-gi-mist" style={{ color: '#4AB3A0' }}>
+                Answer one or more of the prompts below. You can skip any that don't resonate.
+              </p>
+            </div>
+
+            {prompts.map((prompt, i) => (
+              <div key={i}>
+                <p className="text-gi-white text-sm italic leading-relaxed mb-2">
+                  "{prompt}"
+                </p>
+                <textarea
+                  value={answers[i] || ''}
+                  onChange={e => setAnswer(i, e.target.value)}
+                  placeholder="Your reflection…"
+                  rows={3}
+                  maxLength={600}
+                  className="w-full bg-gi-deep text-gi-white text-sm rounded-gi px-4 py-3 leading-relaxed resize-none outline-none border border-gi-slate/60 focus:border-gi-gold/50 transition-colors placeholder-gi-mist/40"
+                />
+                <div className="flex justify-between mt-1">
+                  {(answers[i] || '').length > 0 && (
+                    <button
+                      onClick={() => setAnswer(i, '')}
+                      className="text-gi-mist text-xs hover:text-gi-horizon transition-colors"
+                    >
+                      Clear
+                    </button>
+                  )}
+                  <span className="text-gi-mist text-xs ml-auto">
+                    {(answers[i] || '').length}/600
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Free write */}
+        <div>
+          <label className="block text-gi-horizon text-xs uppercase tracking-widest mb-2">
+            Additional thoughts <span className="normal-case text-gi-mist">(optional)</span>
+          </label>
+          <textarea
+            value={freeText}
+            onChange={e => setFreeText(e.target.value)}
+            placeholder="Anything else on your mind this week…"
+            rows={3}
+            maxLength={800}
+            className="w-full bg-gi-deep text-gi-white text-sm rounded-gi px-4 py-3 leading-relaxed resize-none outline-none border border-gi-slate/60 focus:border-gi-gold/50 transition-colors placeholder-gi-mist/40"
+          />
+        </div>
+
+        <SaveButton onClick={handleSave} disabled={!canSave} saving={saving} />
+      </div>
+    </ModalShell>
+  );
+}
+
+// ── Baseline Form ─────────────────────────────────────────────────────────────
+
+const BASELINE_SLIDERS = [
+  {
+    key: 'selfAwareness',
+    label: 'Self-Awareness',
+    description: 'How clearly do you see your own leadership strengths and gaps?',
+  },
+  {
+    key: 'teamLeadership',
+    label: 'Team Leadership',
+    description: 'How effectively do you develop and empower those around you?',
+  },
+  {
+    key: 'problemSolving',
+    label: 'Problem-Solving',
+    description: 'How well do you find root causes rather than treating symptoms?',
+  },
+  {
+    key: 'cultureBuilding',
+    label: 'Culture Building',
+    description: 'How intentionally do you shape the environment your team works in?',
+  },
+];
+
+function BaselineSlider({ slider, value, onChange }) {
+  const pct = ((value - 1) / 9) * 100;
+  return (
+    <div className="mb-6">
+      <div className="flex items-start justify-between mb-1">
+        <div>
+          <p className="text-gi-white text-sm font-medium">{slider.label}</p>
+          <p className="text-gi-mist text-xs leading-snug mt-0.5">{slider.description}</p>
+        </div>
+        <span
+          className="text-2xl font-light flex-shrink-0 ml-4 mt-1 w-8 text-right"
+          style={{ color: '#FFD559' }}
+        >
+          {value}
+        </span>
+      </div>
+      <div className="relative mt-3">
+        {/* Track */}
+        <div className="relative h-1.5 rounded-full" style={{ background: 'rgba(74,100,120,0.4)' }}>
+          <div
+            className="absolute left-0 top-0 h-full rounded-full transition-all duration-150"
+            style={{
+              width: `${pct}%`,
+              background: 'linear-gradient(90deg, #4A6478, #FFD559)',
+            }}
+          />
+        </div>
+        <input
+          type="range"
+          min="1"
+          max="10"
+          value={value}
+          onChange={e => onChange(Number(e.target.value))}
+          className="absolute inset-0 w-full opacity-0 cursor-pointer h-6 -top-2"
+          style={{ zIndex: 1 }}
+        />
+        {/* Thumb dot */}
+        <div
+          className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border-2 pointer-events-none"
+          style={{
+            left: `calc(${pct}% - 8px)`,
+            background: '#FFD559',
+            borderColor: '#1C2B3A',
+            boxShadow: '0 1px 6px rgba(255,213,89,0.5)',
+            marginTop: '-3px',
+          }}
+        />
+      </div>
+      <div className="flex justify-between mt-2">
+        <span className="text-gi-mist text-xs">Just starting</span>
+        <span className="text-gi-mist text-xs">Fully embodied</span>
+      </div>
+    </div>
+  );
+}
+
+function BaselineForm({ onClose, onSaved }) {
+  const { currentUser } = useAuth();
+  const [values, setValues] = useState({
+    selfAwareness: 5,
+    teamLeadership: 5,
+    problemSolving: 5,
+    cultureBuilding: 5,
+  });
+  const [note, setNote] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const setValue = (key, val) => setValues(v => ({ ...v, [key]: val }));
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await saveBaselineEntry(currentUser.uid, {
+        label: `Baseline — ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`,
+        scores: values,
+        note: note.trim(),
+      });
+      onSaved();
+    } catch (err) {
+      console.error('Error saving baseline:', err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <ModalShell onClose={onClose}>
+      <ModalHeader
+        title="Baseline"
+        subtitle="Where are you right now as a leader?"
+        onClose={onClose}
+      />
+      <div className="flex flex-col gap-2 p-5 pb-8">
+        <div
+          className="px-4 py-3 rounded-gi mb-3"
+          style={{ background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)' }}
+        >
+          <p className="text-xs leading-relaxed" style={{ color: '#A78BFA' }}>
+            Rate yourself honestly — there are no right answers. This snapshot helps you see how much you grow.
+          </p>
+        </div>
+
+        {BASELINE_SLIDERS.map(s => (
+          <BaselineSlider
+            key={s.key}
+            slider={s}
+            value={values[s.key]}
+            onChange={val => setValue(s.key, val)}
+          />
+        ))}
+
+        {/* Optional note */}
+        <div className="mt-2">
+          <label className="block text-gi-horizon text-xs uppercase tracking-widest mb-2">
+            Notes <span className="normal-case text-gi-mist">(optional)</span>
+          </label>
+          <textarea
+            value={note}
+            onChange={e => setNote(e.target.value)}
+            placeholder="What's on your mind about where you are right now?"
+            rows={3}
+            maxLength={600}
+            className="w-full bg-gi-deep text-gi-white text-sm rounded-gi px-4 py-3 leading-relaxed resize-none outline-none border border-gi-slate/60 focus:border-gi-gold/50 transition-colors placeholder-gi-mist/40"
+          />
+        </div>
+
+        <SaveButton onClick={handleSave} saving={saving} label="Save baseline" />
+      </div>
+    </ModalShell>
+  );
+}
+
+// ── Root NewEntryModal ────────────────────────────────────────────────────────
+
+/**
+ * Props:
+ *   onClose()          — called when the user closes or finishes
+ *   initialType        — 'genba-moment' | 'stop-and-think' | 'baseline' | null
+ *   initialModule      — moduleId string (used when type is 'stop-and-think')
+ */
+export default function NewEntryModal({ onClose, initialType = null, initialModule = null }) {
+  const [type, setType] = useState(initialType);
+  const [saved, setSaved] = useState(false);
+  const [savedLabel, setSavedLabel] = useState('');
+
+  const handleSaved = (label) => {
+    setSavedLabel(label || 'Entry saved.');
+    setSaved(true);
+  };
+
+  if (saved) {
+    return (
+      <ModalShell onClose={onClose}>
+        <SavedState label={savedLabel} onDone={onClose} />
+      </ModalShell>
+    );
+  }
+
+  if (!type) {
+    return <TypePicker onSelect={setType} onClose={onClose} />;
+  }
+
+  if (type === 'genba-moment') {
+    return (
+      <GenbaMomentForm
+        onClose={onClose}
+        onSaved={() => handleSaved('Genba Ikigai Moment saved.')}
+      />
+    );
+  }
+
+  if (type === 'stop-and-think') {
+    return (
+      <StopAndThinkForm
+        onClose={onClose}
+        onSaved={() => handleSaved('Reflection saved.')}
+        initialModule={initialModule}
+      />
+    );
+  }
+
+  if (type === 'baseline') {
+    return (
+      <BaselineForm
+        onClose={onClose}
+        onSaved={() => handleSaved('Baseline saved.')}
+      />
+    );
+  }
+
+  return null;
+}

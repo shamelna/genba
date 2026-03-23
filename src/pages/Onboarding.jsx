@@ -1,231 +1,350 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { useUserTier } from '../contexts/UserTierContext';
-import heroBook from '../../assets/hero-book-floating-water.jpg';
-import book3d from '../../assets/book-3d-mockup-editorial.jpg';
-import authorCoachingImage from '../../assets/author-mark-forkun-coaching.jpg';
+import SarahAvatar from '../components/avatars/SarahAvatar';
+import KenjiAvatar from '../components/avatars/KenjiAvatar';
+import { saveOnboardingBaseline } from '../services/firestoreService';
 
+const TOTAL_STEPS = 5;
+
+// ─── Reusable step progress dots ─────────────────────────────────────────────
+function StepDots({ current, total }) {
+  return (
+    <div className="flex justify-center gap-2 mb-8">
+      {Array.from({ length: total }).map((_, i) => (
+        <div
+          key={i}
+          className={`rounded-full transition-all duration-300 ${
+            i + 1 === current
+              ? 'w-6 h-2 bg-gi-gold'
+              : i + 1 < current
+              ? 'w-2 h-2 bg-gi-gold opacity-50'
+              : 'w-2 h-2 bg-gi-mist opacity-40'
+          }`}
+        />
+      ))}
+    </div>
+  );
+}
+
+// ─── Slider component ─────────────────────────────────────────────────────────
+function LabelledSlider({ label, value, onChange }) {
+  return (
+    <div className="mb-6">
+      <div className="flex justify-between items-start mb-3">
+        <p className="text-gi-white text-sm leading-relaxed flex-1 pr-4">{label}</p>
+        <span className="text-gi-gold font-light text-2xl w-8 text-right flex-shrink-0">{value}</span>
+      </div>
+      <input
+        type="range"
+        min={1}
+        max={10}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="w-full h-1 appearance-none rounded-full cursor-pointer"
+        style={{
+          background: `linear-gradient(to right, #FFD559 0%, #FFD559 ${(value - 1) / 9 * 100}%, #4A6478 ${(value - 1) / 9 * 100}%, #4A6478 100%)`,
+          outline: 'none',
+        }}
+      />
+      <div className="flex justify-between text-gi-mist text-xs mt-1">
+        <span>Not at all</span>
+        <span>Completely</span>
+      </div>
+    </div>
+  );
+}
+
+// ─── Main Onboarding Component ────────────────────────────────────────────────
 export default function Onboarding() {
-  const [currentScreen, setCurrentScreen] = useState(1);
-  const [userName, setUserName] = useState('');
+  const [step, setStep] = useState(1);
+  const [saving, setSaving] = useState(false);
+
+  // Step 3 baseline sliders
+  const [baseline, setBaseline] = useState({
+    purpose: 5,
+    teamDependency: 5,
+    reflection: 5,
+    autonomy: 5,
+  });
+
   const { currentUser, updateUserProfile } = useAuth();
-  const { isPremium } = useUserTier();
   const navigate = useNavigate();
 
+  // If onboarding is already complete, go home
   useEffect(() => {
-    if (currentUser?.displayName) {
-      setUserName(currentUser.displayName);
-    }
-  }, [currentUser]);
-
-  useEffect(() => {
-    console.log('Onboarding - currentUser:', currentUser);
-    console.log('Onboarding - onboardingComplete:', currentUser?.onboardingComplete);
     if (currentUser?.onboardingComplete) {
-      console.log('Onboarding complete, navigating to home');
       navigate('/home');
     }
   }, [currentUser, navigate]);
 
-  const handleCompleteOnboarding = async () => {
+  const handleSaveBaseline = async () => {
+    setSaving(true);
     try {
-      console.log('Completing onboarding for user:', currentUser.uid);
-      console.log('Setting displayName:', userName);
-      
-      if (!currentUser || !currentUser.uid) {
-        console.error('No current user or UID found');
-        return;
-      }
-      
-      // Set a timeout to ensure navigation happens even if Firestore hangs
-      const navigationTimeout = setTimeout(() => {
-        console.log('Timeout reached, forcing navigation to home');
-        navigate('/home');
-      }, 3000);
-      
-      await updateUserProfile(currentUser.uid, {
-        displayName: userName,
-        onboardingComplete: true
-      });
-      
-      clearTimeout(navigationTimeout);
-      console.log('Onboarding completed successfully, navigating to home');
-      navigate('/home');
-    } catch (error) {
-      console.error('Error completing onboarding:', error);
-      // Still navigate even if Firestore fails
-      console.log('Navigating to home despite Firestore error');
-      navigate('/home');
+      await saveOnboardingBaseline(currentUser.uid, baseline);
+    } catch (err) {
+      console.error('Error saving baseline:', err);
+    } finally {
+      setSaving(false);
+      setStep(4);
     }
   };
 
-  const renderScreen1 = () => (
-    <div className="min-h-screen relative flex items-center justify-center">
-      {/* Background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-gi-deep via-gi-slate to-gi-deep" />
-      
-      <div className="relative z-10 w-full max-w-lg mx-4 text-center px-6">
-        {/* Book Image */}
-        <div className="mb-8">
-          <img 
-            src={book3d} 
-            alt="Genba Ikigai Book" 
-            className="w-48 h-auto mx-auto rounded-lg shadow-2xl"
-          />
-        </div>
+  const handleFinish = async () => {
+    setSaving(true);
+    try {
+      await updateUserProfile(currentUser.uid, { onboardingComplete: true });
+    } catch (err) {
+      console.error('Error completing onboarding:', err);
+    } finally {
+      setSaving(false);
+      navigate('/home?firstVisit=true');
+    }
+  };
 
-        {/* App Name */}
-        <h1 className="text-4xl font-light tracking-wider text-gi-white mb-4">
-          Genba Ikigai
+  // ── Step 1: Welcome bridge ─────────────────────────────────────────────────
+  const renderStep1 = () => (
+    <div className="flex flex-col items-center justify-center min-h-screen px-6 text-center">
+      <StepDots current={1} total={TOTAL_STEPS} />
+
+      <div className="mb-8">
+        <div className="w-16 h-px bg-gi-gold mx-auto mb-8 opacity-60" />
+        <h1 className="text-4xl font-light text-gi-white tracking-wide leading-tight mb-4">
+          Welcome to your<br />Genba Ikigai journey.
         </h1>
-        
-        <p className="text-gi-horizon text-lg mb-8 leading-relaxed">
-          Leading to Serve - A companion app for your journey of continuous improvement and servant leadership
+        <div className="w-16 h-px bg-gi-gold mx-auto mt-8 mb-8 opacity-60" />
+        <p className="text-gi-horizon text-lg leading-relaxed max-w-xs mx-auto">
+          You've just watched the Introduction.<br />Now we go deeper.
         </p>
+      </div>
 
+      <button
+        onClick={() => setStep(2)}
+        className="bg-gi-gold text-gi-deep font-semibold px-10 py-4 rounded-gi hover:opacity-90 transition-opacity"
+      >
+        Let's begin
+      </button>
+    </div>
+  );
+
+  // ── Step 2: What this app is ──────────────────────────────────────────────
+  const renderStep2 = () => (
+    <div className="flex flex-col min-h-screen px-6 py-10">
+      <StepDots current={2} total={TOTAL_STEPS} />
+
+      <div className="mb-8">
+        <h2 className="text-2xl font-light text-gi-white tracking-wide mb-2">
+          Your companion.
+        </h2>
+        <p className="text-gi-horizon text-sm">Three tools. One purpose.</p>
+      </div>
+
+      <div className="flex-1 flex flex-col gap-4">
+        {[
+          {
+            icon: '📖',
+            title: 'Case Studies',
+            desc: 'Follow Sarah and Kenji across all five modules',
+          },
+          {
+            icon: '📓',
+            title: 'Your Journal',
+            desc: 'Record your reflections and insights as you learn',
+          },
+          {
+            icon: '📊',
+            title: 'Your Progress',
+            desc: 'Track your habits and growth over time',
+          },
+        ].map(({ icon, title, desc }) => (
+          <div
+            key={title}
+            className="gi-card p-6 flex items-center gap-5"
+          >
+            <span className="text-3xl flex-shrink-0">{icon}</span>
+            <div>
+              <p className="text-gi-white font-medium mb-0.5">{title}</p>
+              <p className="text-gi-horizon text-sm">{desc}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="pt-8">
         <button
-          onClick={() => setCurrentScreen(2)}
-          className="gi-button-primary text-lg px-8 py-4"
+          onClick={() => setStep(3)}
+          className="w-full bg-gi-gold text-gi-deep font-semibold py-4 rounded-gi hover:opacity-90 transition-opacity"
         >
-          Begin My Journey
+          Got it
         </button>
       </div>
     </div>
   );
 
-  const renderScreen2 = () => (
-    <div className="min-h-screen bg-gi-deep flex items-center justify-center">
-      <div className="w-full max-w-lg mx-4 px-6">
-        <h2 className="text-3xl font-light text-gi-white mb-6 text-center tracking-wide">
-          Welcome to Your Journey
+  // ── Step 3: Baseline sliders ───────────────────────────────────────────────
+  const renderStep3 = () => (
+    <div className="flex flex-col min-h-screen px-6 py-10">
+      <StepDots current={3} total={TOTAL_STEPS} />
+
+      <div className="mb-8">
+        <h2 className="text-2xl font-light text-gi-white tracking-wide mb-2">
+          Before we start — a quick snapshot.
         </h2>
+        <p className="text-gi-horizon text-sm leading-relaxed">
+          No right or wrong answers. This is just your starting point.
+        </p>
+      </div>
 
-        {/* Author Image */}
-        <div className="mb-6">
-          <img 
-            src={authorCoachingImage} 
-            alt="Mark Forkun Coaching" 
-            className="w-32 h-32 rounded-full mx-auto mb-4 border-4 border-gi-gold/20"
-          />
-        </div>
+      <div className="flex-1">
+        <LabelledSlider
+          label="How clear are you on your leadership purpose right now?"
+          value={baseline.purpose}
+          onChange={(v) => setBaseline((b) => ({ ...b, purpose: v }))}
+        />
+        <LabelledSlider
+          label="How much do you feel your team depends on you to solve problems?"
+          value={baseline.teamDependency}
+          onChange={(v) => setBaseline((b) => ({ ...b, teamDependency: v }))}
+        />
+        <LabelledSlider
+          label="How often do you reflect on your own leadership habits?"
+          value={baseline.reflection}
+          onChange={(v) => setBaseline((b) => ({ ...b, reflection: v }))}
+        />
+        <LabelledSlider
+          label="How confident are you that your team would improve without you present?"
+          value={baseline.autonomy}
+          onChange={(v) => setBaseline((b) => ({ ...b, autonomy: v }))}
+        />
+      </div>
 
-        {/* Name Input */}
-        <div className="gi-card p-6 mb-6">
-          <label className="block text-gi-white mb-2 text-sm uppercase tracking-wide">
-            Your Name
-          </label>
-          <input
-            type="text"
-            value={userName}
-            onChange={(e) => setUserName(e.target.value)}
-            placeholder="Enter your name"
-            className="w-full px-4 py-3 bg-gi-water/10 border border-gi-horizon/30 rounded-lg text-gi-white placeholder-gi-mist focus:outline-none focus:border-gi-gold"
-          />
-        </div>
-
-        {/* Introduction Card */}
-        <div className="gi-card p-6 mb-6">
-          <p className="text-gi-white leading-relaxed mb-4">
-            This app is designed to support your journey through the 16 habits of lean leadership. 
-            Each day, you'll reflect on practices that build humility, service, and continuous improvement.
-          </p>
-          <p className="text-gi-horizon text-sm italic">
-            "Leadership is not about being in charge. It's about taking care of those in your charge."
-          </p>
-        </div>
-
-        <div className="flex space-x-4">
-          <button
-            onClick={() => setCurrentScreen(1)}
-            className="flex-1 gi-button-secondary"
-          >
-            Back
-          </button>
-          <button
-            onClick={() => setCurrentScreen(3)}
-            disabled={!userName.trim()}
-            className="flex-1 gi-button-primary disabled:opacity-50"
-          >
-            Continue
-          </button>
-        </div>
+      <div className="pt-4">
+        <button
+          onClick={handleSaveBaseline}
+          disabled={saving}
+          className="w-full bg-gi-gold text-gi-deep font-semibold py-4 rounded-gi hover:opacity-90 transition-opacity disabled:opacity-60"
+        >
+          {saving ? 'Saving…' : 'Save my baseline'}
+        </button>
       </div>
     </div>
   );
 
-  const renderScreen3 = () => (
-    <div className="min-h-screen bg-gi-deep flex items-center justify-center">
-      <div className="w-full max-w-lg mx-4 px-6">
-        <h2 className="text-3xl font-light text-gi-white mb-6 text-center tracking-wide">
-          {isPremium ? 'Your Complete Journey' : 'Start with 16 Habits'}
+  // ── Step 4: Meet the characters ────────────────────────────────────────────
+  const renderStep4 = () => (
+    <div className="flex flex-col min-h-screen px-6 py-10">
+      <StepDots current={4} total={TOTAL_STEPS} />
+
+      <div className="mb-8">
+        <h2 className="text-2xl font-light text-gi-white tracking-wide mb-2">
+          Meet the characters.
         </h2>
+        <p className="text-gi-horizon text-sm">
+          You'll follow them across all five modules.
+        </p>
+      </div>
 
-        {/* Features Overview */}
-        <div className="space-y-4 mb-8">
-          <div className="gi-card p-6">
-            <h3 className="text-xl font-light text-gi-gold mb-3">
-              16 Habits Daily Coach
-            </h3>
-            <p className="text-gi-white leading-relaxed">
-              Daily check-ins for the 16 fundamental habits of lean leadership. 
-              Each habit includes reflection prompts, coaching tips, and progress tracking.
-            </p>
-          </div>
-
-          {isPremium && (
-            <div className="gi-card p-6 border-l-4 border-gi-gold">
-              <h3 className="text-xl font-light text-gi-gold mb-3">
-                My Ikigai Compass
-              </h3>
-              <p className="text-gi-white leading-relaxed">
-                Discover your purpose through the Bus Check-in system and Ikigai Map. 
-                Align your daily work with your deeper calling and values.
-              </p>
+      <div className="flex-1 flex flex-col gap-5">
+        {/* Sarah */}
+        <div className="gi-card p-6">
+          <div className="flex items-center gap-5 mb-4">
+            <SarahAvatar size={64} />
+            <div>
+              <p className="text-gi-white font-semibold text-xl">Sarah</p>
+              <p className="text-gi-horizon text-sm italic">The Leader</p>
             </div>
-          )}
-
-          <div className="gi-card p-6">
-            <h3 className="text-xl font-light text-gi-gold mb-3">
-              Progress & Journal
-            </h3>
-            <p className="text-gi-white leading-relaxed">
-              Track your growth over time with visual progress charts and maintain 
-              a personal journal of your leadership journey.
-            </p>
           </div>
-        </div>
-
-        {/* Final Message */}
-        <div className="text-center mb-8">
-          <p className="text-gi-horizon italic">
-            "The journey of a thousand miles begins with a single step."
+          <p className="text-gi-horizon text-sm leading-relaxed">
+            8 years experience. Works 70-hour weeks. Brilliant — but stuck.
           </p>
         </div>
 
-        <div className="flex space-x-4">
-          <button
-            onClick={() => setCurrentScreen(2)}
-            className="flex-1 gi-button-secondary"
-          >
-            Back
-          </button>
-          <button
-            onClick={handleCompleteOnboarding}
-            className="flex-1 gi-button-primary"
-          >
-            I'm Ready
-          </button>
+        {/* Kenji */}
+        <div className="gi-card p-6">
+          <div className="flex items-center gap-5 mb-4">
+            <KenjiAvatar size={64} />
+            <div>
+              <p className="text-gi-white font-semibold text-xl">Kenji</p>
+              <p className="text-gi-horizon text-sm italic">The Sensei</p>
+            </div>
+          </div>
+          <p className="text-gi-horizon text-sm leading-relaxed">
+            30 years at the Genba. He never gives answers. He asks questions.
+          </p>
         </div>
+      </div>
+
+      <div className="pt-8">
+        <button
+          onClick={() => setStep(5)}
+          className="w-full bg-gi-gold text-gi-deep font-semibold py-4 rounded-gi hover:opacity-90 transition-opacity"
+        >
+          Start Chapter 1
+        </button>
+      </div>
+    </div>
+  );
+
+  // ── Step 5: Module selector confirmation ──────────────────────────────────
+  const MODULES = [
+    { id: 'introduction', label: 'Intro' },
+    { id: 'leading-self', label: 'Self' },
+    { id: 'leading-tribe', label: 'Tribe' },
+    { id: 'problem-solving', label: 'Problem' },
+    { id: 'culture-change', label: 'Culture' },
+  ];
+
+  const renderStep5 = () => (
+    <div className="flex flex-col min-h-screen px-6 py-10">
+      <StepDots current={5} total={TOTAL_STEPS} />
+
+      <div className="flex-1 flex flex-col items-center justify-center text-center">
+        <p className="text-gi-horizon text-sm uppercase tracking-widest mb-6">You're starting with</p>
+        <h2 className="text-3xl font-light text-gi-white tracking-wide mb-2">
+          The Introduction Module
+        </h2>
+        <div className="w-12 h-px bg-gi-gold mx-auto my-6 opacity-60" />
+
+        {/* Module progress pills */}
+        <div className="flex gap-2 mb-10 flex-wrap justify-center">
+          {MODULES.map((m, i) => (
+            <div
+              key={m.id}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                i === 0
+                  ? 'bg-gi-gold text-gi-deep'
+                  : 'bg-gi-slate text-gi-mist border border-gi-mist/30'
+              }`}
+            >
+              {i === 0 ? '→ ' : ''}{m.label}
+            </div>
+          ))}
+        </div>
+
+        <p className="text-gi-horizon text-sm leading-relaxed max-w-xs">
+          Complete each module to unlock the next chapter. Take your time.
+        </p>
+      </div>
+
+      <div className="pt-4">
+        <button
+          onClick={handleFinish}
+          disabled={saving}
+          className="w-full bg-gi-gold text-gi-deep font-semibold py-4 rounded-gi hover:opacity-90 transition-opacity disabled:opacity-60"
+        >
+          {saving ? 'Setting up…' : 'Enter the app'}
+        </button>
       </div>
     </div>
   );
 
   return (
-    <>
-      {currentScreen === 1 && renderScreen1()}
-      {currentScreen === 2 && renderScreen2()}
-      {currentScreen === 3 && renderScreen3()}
-    </>
+    <div className="min-h-screen bg-gi-deep">
+      {step === 1 && renderStep1()}
+      {step === 2 && renderStep2()}
+      {step === 3 && renderStep3()}
+      {step === 4 && renderStep4()}
+      {step === 5 && renderStep5()}
+    </div>
   );
 }

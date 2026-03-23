@@ -20,6 +20,6 @@ export default defineConfig({
     }
   },
   optimizeDeps: {
-    include: ['firebase/app', 'firebase/auth', 'firebase/firestore', 'tslib']
+    include: ['firebase/app', 'firebase/auth', 'firebase/firestore', 'tslib'],
   }
 })

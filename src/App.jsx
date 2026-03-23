@@ -4,6 +4,7 @@ import { AuthProvider } from './contexts/AuthContext.jsx';
 import { UserTierProvider } from './contexts/UserTierContext.jsx';
 import { NotifProvider } from './contexts/NotifContext.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
+import GenbIkigaiWidget from './components/GenbIkigaiWidget.jsx';
 
 // Import pages
 import Login from './pages/Login.jsx';
@@ -15,6 +16,7 @@ import Compass from './pages/Compass.jsx';
 import Journal from './pages/Journal.jsx';
 import Settings from './pages/Settings.jsx';
 import Admin from './pages/Admin.jsx';
+import CaseStudyPage from './pages/CaseStudyPage.jsx';
 
 function App() {
   return (
@@ -59,8 +61,14 @@ function App() {
                   element={<ProtectedRoute requireAdmin={true}><Admin /></ProtectedRoute>}
                 />
                 
+                <Route
+                  path="/case-study/:moduleId"
+                  element={<ProtectedRoute><CaseStudyPage /></ProtectedRoute>}
+                />
+
                 <Route path="/" element={<Navigate to="/home" replace />} />
               </Routes>
+              <GenbIkigaiWidget />
             </div>
           </Router>
         </NotifProvider>
