@@ -196,7 +196,7 @@ export default function Admin() {
   }
 
   return (
-    <div className="min-h-screen bg-gi-deep pb-20">
+    <div className="min-h-screen bg-gi-deep pt-16 pb-6">
       <div className="px-4 py-6">
         {/* Header */}
         <div className="mb-6">

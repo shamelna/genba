@@ -58,40 +58,25 @@ export default function Navigation() {
 
   return (
     <>
-      {/* Admin Notification Banner */}
-      {unreadNotification && (
-        <div className="gi-card mx-4 mt-4 p-4 border-l-4 border-gi-gold">
-          <div className="flex items-start justify-between">
-            <div className="flex items-center">
-              <img src="/app-logo.png" alt="Genba Ikigai" className="w-8 h-8" />
-              <span className="ml-3 text-xl font-light text-gi-white">Genba Ikigai</span>
-            </div>
-            <button onClick={handleNotificationClick} className="text-gi-horizon hover:text-gi-white">
-              ✕
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-gi-deep border-t border-gi-slate z-50">
+      {/* Top Navigation */}
+      <nav className="fixed top-0 left-0 right-0 bg-gi-deep border-b border-gi-slate z-50">
         <div className="flex justify-around items-center py-2">
           {navItems.map((item) => {
             const isActive = item.activeOverride !== undefined
               ? item.activeOverride
               : location.pathname === item.path;
             const isDisabled = item.disabled;
-            
+
             return (
               <button
                 key={item.path}
                 onClick={() => handleNavClick(item.path, isDisabled)}
                 disabled={isDisabled}
                 className={`flex flex-col items-center py-2 px-3 rounded-lg transition-all ${
-                  isActive 
-                    ? 'text-gi-white' 
-                    : isDisabled 
-                      ? 'text-gi-mist/50 cursor-not-allowed' 
+                  isActive
+                    ? 'text-gi-white'
+                    : isDisabled
+                      ? 'text-gi-mist/50 cursor-not-allowed'
                       : 'text-gi-mist hover:text-gi-white'
                 }`}
               >
@@ -106,8 +91,25 @@ export default function Navigation() {
         </div>
       </nav>
 
-      {/* Add padding to account for fixed navigation */}
-      <div className="h-20"></div>
+      {/* Admin Notification Banner — sits just below the fixed nav */}
+      {unreadNotification && (
+        <div
+          className="fixed left-0 right-0 z-40 mx-4 mt-1"
+          style={{ top: '64px' }}
+        >
+          <div className="gi-card p-3 border-l-4 border-gi-gold flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <img src="/app-logo.png" alt="Genba Ikigai" className="w-6 h-6" />
+              <span className="text-sm font-light text-gi-white">
+                {unreadNotification.text || 'You have a new notification'}
+              </span>
+            </div>
+            <button onClick={handleNotificationClick} className="text-gi-horizon hover:text-gi-white ml-3 flex-shrink-0">
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 }

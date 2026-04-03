@@ -19,6 +19,26 @@ export default function CaseStudyScene({ scene, isNew = false }) {
     }
   }, [isNew]);
 
+  // ── Act Divider ────────────────────────────────────────────────────────────
+  if (scene.type === 'act') {
+    return (
+      <div
+        ref={ref}
+        className="px-6 py-5 flex items-center gap-4"
+        style={{ animation: isNew ? 'fadeIn 0.4s ease' : undefined }}
+      >
+        <div className="flex-1 h-px" style={{ background: 'rgba(255,213,89,0.25)' }} />
+        <span
+          className="text-xs font-medium tracking-widest uppercase flex-shrink-0"
+          style={{ color: '#FFD559', letterSpacing: '0.12em' }}
+        >
+          {scene.label}
+        </span>
+        <div className="flex-1 h-px" style={{ background: 'rgba(255,213,89,0.25)' }} />
+      </div>
+    );
+  }
+
   // ── Narrator ───────────────────────────────────────────────────────────────
   if (scene.type === 'narrator') {
     return (

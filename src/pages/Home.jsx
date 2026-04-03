@@ -6,7 +6,8 @@ import Navigation from '../components/Navigation';
 import CourseJourneyCard from '../components/CourseJourneyCard';
 import HabitsHouseInline from '../components/HabitsHouseInline';
 import { habitsData, dailyReflectionPrompts } from '../data/habitsData';
-import { calculateStreak, getHabitCheckinByDate } from '../services/firestoreService';
+import { calculateStreak, getHabitCheckinByDate, getCourseProgress } from '../services/firestoreService';
+import { MODULE_ORDER } from '../data/caseStudies';
 import singleStoneImage from '../../assets/single-stone-card.jpg';
 import bookDeskImage from '../../assets/book-open-desk.jpg';
 
@@ -23,6 +24,7 @@ export default function Home() {
   const [reflectionPrompt, setReflectionPrompt] = useState('');
   // Daily practice drawer — collapsed by default so Course Journey stays hero
   const [showDaily, setShowDaily] = useState(false);
+  const [currentModuleId, setCurrentModuleId] = useState(null);
 
   useEffect(() => {
     const hour = new Date().getHours();
@@ -42,8 +44,17 @@ export default function Home() {
   const loadUserData = async () => {
     if (!currentUser) return;
     try {
-      const userStreak = await calculateStreak(currentUser.uid);
+      const [userStreak, courseProgress] = await Promise.all([
+        calculateStreak(currentUser.uid),
+        getCourseProgress(currentUser.uid),
+      ]);
       setStreak(userStreak);
+
+      // Determine which module is currently active
+      const activeId = MODULE_ORDER.find(id => !courseProgress?.[id]?.completed)
+        || MODULE_ORDER[MODULE_ORDER.length - 1];
+      setCurrentModuleId(activeId);
+
       const today = new Date().toISOString().split('T')[0];
       const checkin = await getHabitCheckinByDate(currentUser.uid, today);
       setTodayCheckin(checkin);
@@ -57,7 +68,7 @@ export default function Home() {
   const getFirstName = (name) => name ? name.split(' ')[0] : 'Leader';
 
   return (
-    <div className="min-h-screen bg-gi-deep pb-24">
+    <div className="min-h-screen bg-gi-deep pt-16 pb-6">
       <div className="px-4 pt-6 pb-2">
         {/* Greeting — lighter weight now that journey card is the hero */}
         <p className="text-gi-horizon text-sm uppercase tracking-widest mb-1">
@@ -84,7 +95,7 @@ export default function Home() {
             padding: '12px 10px 10px',
           }}
         >
-          <HabitsHouseInline />
+          <HabitsHouseInline currentModuleId={currentModuleId} />
         </div>
 
         {/* ── DAILY PRACTICE DRAWER ── */}

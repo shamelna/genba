@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { caseStudies, MODULE_ORDER, MODULE_LABELS } from '../data/caseStudies';
 import {
@@ -6,6 +6,7 @@ import {
   saveStopAndThinkReflection,
   saveBaselineEntry,
 } from '../services/firestoreService';
+import Toast from './Toast';
 
 // ── Shared helpers ────────────────────────────────────────────────────────────
 
@@ -144,28 +145,28 @@ function TypePicker({ onSelect, onClose }) {
 
 // ── Genba Ikigai Moment Form ──────────────────────────────────────────────────
 
-const IKIGAI_ZONES = [
-  { id: 'love-good', label: 'Love it & Good at it', color: '#F59E0B' },
-  { id: 'good-paid', label: 'Good at it & Can be paid', color: '#10B981' },
-  { id: 'paid-world', label: 'Paid & World needs it', color: '#3B82F6' },
-  { id: 'world-love', label: 'World needs it & Love it', color: '#8B5CF6' },
+// The four Ikigai circles (individual, not intersections)
+const IKIGAI_CIRCLES = [
+  { id: 'love',    label: 'What I Love',               color: '#F59E0B' },
+  { id: 'good',    label: 'What I am Good At',          color: '#10B981' },
+  { id: 'world',   label: 'What the World Needs',       color: '#3B82F6' },
+  { id: 'valued',  label: 'What I am Valued For',       color: '#8B5CF6' },
 ];
 
 function GenbaMomentForm({ onClose, onSaved }) {
   const { currentUser } = useAuth();
   const [form, setForm] = useState({
     situation: '',
-    noticed: '',
-    action: '',
-    learned: '',
+    whoInvolved: '',
+    meaningful: '',
   });
-  const [zones, setZones] = useState([]);
+  const [circles, setCircles] = useState([]);
   const [saving, setSaving] = useState(false);
 
   const set = (key, val) => setForm(f => ({ ...f, [key]: val }));
-  const toggleZone = (id) => setZones(z => z.includes(id) ? z.filter(x => x !== id) : [...z, id]);
+  const toggleCircle = (id) => setCircles(c => c.includes(id) ? c.filter(x => x !== id) : [...c, id]);
 
-  const canSave = form.situation.trim() || form.learned.trim();
+  const canSave = form.situation.trim() || form.meaningful.trim();
 
   const handleSave = async () => {
     if (!canSave) return;
@@ -173,10 +174,9 @@ function GenbaMomentForm({ onClose, onSaved }) {
     try {
       await saveGenbaMoment(currentUser.uid, {
         situation: form.situation.trim(),
-        noticed: form.noticed.trim(),
-        action: form.action.trim(),
-        learned: form.learned.trim(),
-        ikigaiZones: zones,
+        whoInvolved: form.whoInvolved.trim(),
+        meaningful: form.meaningful.trim(),
+        ikigaiCircles: circles,
       });
       onSaved();
     } catch (err) {
@@ -198,92 +198,77 @@ function GenbaMomentForm({ onClose, onSaved }) {
         {/* Situation */}
         <div>
           <label className="block text-gi-gold text-xs uppercase tracking-widest mb-2">
-            The situation
+            The moment
           </label>
           <textarea
             value={form.situation}
             onChange={e => set('situation', e.target.value)}
-            placeholder="Briefly describe what was happening…"
-            rows={2}
-            maxLength={500}
-            className="w-full bg-gi-deep text-gi-white text-sm rounded-gi px-4 py-3 leading-relaxed resize-none outline-none border border-gi-slate/60 focus:border-gi-gold/50 transition-colors placeholder-gi-mist/40"
-          />
-        </div>
-
-        {/* Noticed */}
-        <div>
-          <label className="block text-gi-horizon text-xs uppercase tracking-widest mb-2">
-            What you noticed
-          </label>
-          <textarea
-            value={form.noticed}
-            onChange={e => set('noticed', e.target.value)}
-            placeholder="What did you observe — about yourself, your team, the environment?"
-            rows={2}
-            maxLength={500}
-            className="w-full bg-gi-deep text-gi-white text-sm rounded-gi px-4 py-3 leading-relaxed resize-none outline-none border border-gi-slate/60 focus:border-gi-gold/50 transition-colors placeholder-gi-mist/40"
-          />
-        </div>
-
-        {/* Action */}
-        <div>
-          <label className="block text-gi-horizon text-xs uppercase tracking-widest mb-2">
-            What you did or tried
-          </label>
-          <textarea
-            value={form.action}
-            onChange={e => set('action', e.target.value)}
-            placeholder="How did you respond or lead in that moment?"
-            rows={2}
-            maxLength={500}
-            className="w-full bg-gi-deep text-gi-white text-sm rounded-gi px-4 py-3 leading-relaxed resize-none outline-none border border-gi-slate/60 focus:border-gi-gold/50 transition-colors placeholder-gi-mist/40"
-          />
-        </div>
-
-        {/* Learned */}
-        <div>
-          <label className="block text-gi-gold text-xs uppercase tracking-widest mb-2">
-            What you learned
-          </label>
-          <textarea
-            value={form.learned}
-            onChange={e => set('learned', e.target.value)}
-            placeholder="What insight or shift came out of this moment?"
+            placeholder="Describe the moment specifically. What was happening around you?"
             rows={3}
             maxLength={600}
             className="w-full bg-gi-deep text-gi-white text-sm rounded-gi px-4 py-3 leading-relaxed resize-none outline-none border border-gi-slate/60 focus:border-gi-gold/50 transition-colors placeholder-gi-mist/40"
           />
         </div>
 
-        {/* Ikigai zone tags */}
+        {/* Who was involved */}
         <div>
           <label className="block text-gi-horizon text-xs uppercase tracking-widest mb-2">
-            Which Ikigai zone does this touch? <span className="normal-case text-gi-mist">(optional)</span>
+            Who was involved
+          </label>
+          <textarea
+            value={form.whoInvolved}
+            onChange={e => set('whoInvolved', e.target.value)}
+            placeholder="What were you doing? Who else was involved?"
+            rows={2}
+            maxLength={500}
+            className="w-full bg-gi-deep text-gi-white text-sm rounded-gi px-4 py-3 leading-relaxed resize-none outline-none border border-gi-slate/60 focus:border-gi-gold/50 transition-colors placeholder-gi-mist/40"
+          />
+        </div>
+
+        {/* What made it meaningful */}
+        <div>
+          <label className="block text-gi-gold text-xs uppercase tracking-widest mb-2">
+            Why it mattered
+          </label>
+          <textarea
+            value={form.meaningful}
+            onChange={e => set('meaningful', e.target.value)}
+            placeholder="What made it meaningful to you — not what should have, but what actually did?"
+            rows={3}
+            maxLength={600}
+            className="w-full bg-gi-deep text-gi-white text-sm rounded-gi px-4 py-3 leading-relaxed resize-none outline-none border border-gi-slate/60 focus:border-gi-gold/50 transition-colors placeholder-gi-mist/40"
+          />
+        </div>
+
+        {/* Ikigai circle tags */}
+        <div>
+          <label className="block text-gi-horizon text-xs uppercase tracking-widest mb-2">
+            Which Ikigai circle does this connect to? <span className="normal-case text-gi-mist">(optional)</span>
           </label>
           <div className="flex flex-col gap-2">
-            {IKIGAI_ZONES.map(z => (
+            {IKIGAI_CIRCLES.map(c => (
               <button
-                key={z.id}
+                key={c.id}
                 type="button"
-                onClick={() => toggleZone(z.id)}
+                onClick={() => toggleCircle(c.id)}
                 className="flex items-center gap-3 px-4 py-2.5 rounded-gi text-left text-sm transition-all"
                 style={{
-                  background: zones.includes(z.id) ? `${z.color}18` : 'transparent',
-                  border: `1px solid ${zones.includes(z.id) ? z.color : 'rgba(74,100,120,0.4)'}`,
-                  color: zones.includes(z.id) ? z.color : '#8BA0B2',
+                  background: circles.includes(c.id) ? `${c.color}18` : 'transparent',
+                  border: `1px solid ${circles.includes(c.id) ? c.color : 'rgba(74,100,120,0.4)'}`,
+                  color: circles.includes(c.id) ? c.color : '#8BA0B2',
                 }}
               >
                 <span
                   className="w-4 h-4 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold"
                   style={{
-                    background: zones.includes(z.id) ? z.color : 'transparent',
-                    border: `2px solid ${z.color}`,
-                    color: zones.includes(z.id) ? '#1C2B3A' : z.color,
+                    background: circles.includes(c.id) ? c.color : 'transparent',
+                    border: `2px solid ${c.color}`,
+                    color: circles.includes(c.id) ? '#1C2B3A' : c.color,
                   }}
                 >
-                  {zones.includes(z.id) ? '✓' : ''}
+                  {circles.includes(c.id) ? '✓' : ''}
                 </span>
-                {z.label}
+                {c.label}
               </button>
             ))}
           </div>
@@ -300,24 +285,52 @@ function GenbaMomentForm({ onClose, onSaved }) {
 function StopAndThinkForm({ onClose, onSaved, initialModule }) {
   const { currentUser } = useAuth();
   const [moduleId, setModuleId] = useState(initialModule || 'introduction');
+  const [activePart, setActivePart] = useState(null); // null = not yet chosen (for object-style)
   const [answers, setAnswers] = useState({});
   const [freeText, setFreeText] = useState('');
   const [saving, setSaving] = useState(false);
 
   const study = caseStudies[moduleId];
-  const prompts = study?.stopAndThinkPrompts || [];
+  const rawPrompts = study?.stopAndThinkPrompts;
 
-  const setAnswer = (idx, val) => setAnswers(a => ({ ...a, [idx]: val }));
+  // Support both old (array) and new (object with Part keys) formats
+  const isParted = rawPrompts && !Array.isArray(rawPrompts) && typeof rawPrompts === 'object';
+  const partKeys = isParted ? Object.keys(rawPrompts) : [];
+  const currentPart = isParted ? (activePart || partKeys[0]) : null;
+  const prompts = isParted
+    ? (rawPrompts[currentPart] || [])
+    : (Array.isArray(rawPrompts) ? rawPrompts : []);
+
+  const answerKey = (part, i) => isParted ? `${part}__${i}` : String(i);
+  const setAnswer = (key, val) => setAnswers(a => ({ ...a, [key]: val }));
   const canSave = Object.values(answers).some(v => v.trim()) || freeText.trim();
+
+  const handleModuleChange = (newId) => {
+    setModuleId(newId);
+    setActivePart(null);
+    setAnswers({});
+  };
 
   const handleSave = async () => {
     if (!canSave) return;
     setSaving(true);
     try {
-      const promptAnswers = prompts.map((prompt, i) => ({
-        prompt,
-        answer: (answers[i] || '').trim(),
-      })).filter(p => p.answer);
+      // Flatten all answered prompts across all parts
+      let promptAnswers = [];
+      if (isParted) {
+        partKeys.forEach(part => {
+          const partPrompts = rawPrompts[part] || [];
+          partPrompts.forEach((prompt, i) => {
+            const ans = (answers[`${part}__${i}`] || '').trim();
+            if (ans) promptAnswers.push({ part, prompt, answer: ans });
+          });
+        });
+      } else {
+        promptAnswers = prompts.map((prompt, i) => ({
+          prompt,
+          answer: (answers[String(i)] || '').trim(),
+        })).filter(p => p.answer);
+      }
 
       await saveStopAndThinkReflection(currentUser.uid, {
         moduleId,
@@ -349,7 +362,7 @@ function StopAndThinkForm({ onClose, onSaved, initialModule }) {
           </label>
           <select
             value={moduleId}
-            onChange={e => { setModuleId(e.target.value); setAnswers({}); }}
+            onChange={e => handleModuleChange(e.target.value)}
             className="w-full bg-gi-deep text-gi-white text-sm rounded-gi px-4 py-3 border border-gi-slate/60 outline-none focus:border-gi-gold/50 transition-colors"
             style={{ appearance: 'none' }}
           >
@@ -359,6 +372,41 @@ function StopAndThinkForm({ onClose, onSaved, initialModule }) {
           </select>
         </div>
 
+        {/* Part tabs (only for modules with part-based prompts) */}
+        {isParted && (
+          <div>
+            <label className="block text-gi-gold text-xs uppercase tracking-widest mb-2">
+              Which part?
+            </label>
+            <div className="flex flex-col gap-2">
+              {partKeys.map(part => {
+                const partAnswered = (rawPrompts[part] || []).some(
+                  (_, i) => (answers[`${part}__${i}`] || '').trim()
+                );
+                const isSelected = (activePart || partKeys[0]) === part;
+                return (
+                  <button
+                    key={part}
+                    type="button"
+                    onClick={() => setActivePart(part)}
+                    className="flex items-center justify-between px-4 py-3 rounded-gi text-left text-sm transition-all"
+                    style={{
+                      background: isSelected ? 'rgba(74,179,160,0.12)' : 'rgba(37,53,69,0.6)',
+                      border: `1px solid ${isSelected ? 'rgba(74,179,160,0.5)' : 'rgba(74,100,120,0.4)'}`,
+                      color: isSelected ? '#4AB3A0' : '#8BA0B2',
+                    }}
+                  >
+                    <span>{part}</span>
+                    {partAnswered && (
+                      <span className="text-xs ml-2" style={{ color: '#4AB3A0' }}>✓</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Prompts */}
         {prompts.length > 0 && (
           <div className="flex flex-col gap-5">
@@ -366,39 +414,42 @@ function StopAndThinkForm({ onClose, onSaved, initialModule }) {
               className="px-4 py-3 rounded-gi"
               style={{ background: 'rgba(74,179,160,0.08)', border: '1px solid rgba(74,179,160,0.2)' }}
             >
-              <p className="text-xs text-gi-mist" style={{ color: '#4AB3A0' }}>
-                Answer one or more of the prompts below. You can skip any that don't resonate.
+              <p className="text-xs" style={{ color: '#4AB3A0' }}>
+                Answer one or more prompts below. You can skip any that don't resonate.
               </p>
             </div>
 
-            {prompts.map((prompt, i) => (
-              <div key={i}>
-                <p className="text-gi-white text-sm italic leading-relaxed mb-2">
-                  "{prompt}"
-                </p>
-                <textarea
-                  value={answers[i] || ''}
-                  onChange={e => setAnswer(i, e.target.value)}
-                  placeholder="Your reflection…"
-                  rows={3}
-                  maxLength={600}
-                  className="w-full bg-gi-deep text-gi-white text-sm rounded-gi px-4 py-3 leading-relaxed resize-none outline-none border border-gi-slate/60 focus:border-gi-gold/50 transition-colors placeholder-gi-mist/40"
-                />
-                <div className="flex justify-between mt-1">
-                  {(answers[i] || '').length > 0 && (
-                    <button
-                      onClick={() => setAnswer(i, '')}
-                      className="text-gi-mist text-xs hover:text-gi-horizon transition-colors"
-                    >
-                      Clear
-                    </button>
-                  )}
-                  <span className="text-gi-mist text-xs ml-auto">
-                    {(answers[i] || '').length}/600
-                  </span>
+            {prompts.map((prompt, i) => {
+              const key = answerKey(currentPart, i);
+              return (
+                <div key={key}>
+                  <p className="text-gi-white text-sm italic leading-relaxed mb-2">
+                    "{prompt}"
+                  </p>
+                  <textarea
+                    value={answers[key] || ''}
+                    onChange={e => setAnswer(key, e.target.value)}
+                    placeholder="Your reflection…"
+                    rows={3}
+                    maxLength={600}
+                    className="w-full bg-gi-deep text-gi-white text-sm rounded-gi px-4 py-3 leading-relaxed resize-none outline-none border border-gi-slate/60 focus:border-gi-gold/50 transition-colors placeholder-gi-mist/40"
+                  />
+                  <div className="flex justify-between mt-1">
+                    {(answers[key] || '').length > 0 && (
+                      <button
+                        onClick={() => setAnswer(key, '')}
+                        className="text-gi-mist text-xs hover:text-gi-horizon transition-colors"
+                      >
+                        Clear
+                      </button>
+                    )}
+                    <span className="text-gi-mist text-xs ml-auto">
+                      {(answers[key] || '').length}/600
+                    </span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
@@ -427,24 +478,24 @@ function StopAndThinkForm({ onClose, onSaved, initialModule }) {
 
 const BASELINE_SLIDERS = [
   {
-    key: 'selfAwareness',
-    label: 'Self-Awareness',
-    description: 'How clearly do you see your own leadership strengths and gaps?',
+    key: 'leadershipPurpose',
+    label: 'Clarity on my leadership purpose right now',
+    description: 'How clear is your sense of why you lead — not the role, but the purpose?',
   },
   {
-    key: 'teamLeadership',
-    label: 'Team Leadership',
-    description: 'How effectively do you develop and empower those around you?',
+    key: 'teamAutonomy',
+    label: "My team's ability to solve problems without me",
+    description: 'How well can your team identify and resolve issues independently?',
   },
   {
-    key: 'problemSolving',
-    label: 'Problem-Solving',
-    description: 'How well do you find root causes rather than treating symptoms?',
+    key: 'reflectionHabit',
+    label: 'Consistency of my daily self-reflection habit',
+    description: 'How regularly do you pause to reflect on your own leadership behaviour?',
   },
   {
-    key: 'cultureBuilding',
-    label: 'Culture Building',
-    description: 'How intentionally do you shape the environment your team works in?',
+    key: 'teamTrust',
+    label: 'The level of trust in my team right now',
+    description: 'How much do team members trust each other — and trust you?',
   },
 ];
 
@@ -497,8 +548,8 @@ function BaselineSlider({ slider, value, onChange }) {
         />
       </div>
       <div className="flex justify-between mt-2">
-        <span className="text-gi-mist text-xs">Just starting</span>
-        <span className="text-gi-mist text-xs">Fully embodied</span>
+        <span className="text-gi-mist text-xs">1 — Not yet</span>
+        <span className="text-gi-mist text-xs">10 — Fully</span>
       </div>
     </div>
   );
@@ -507,10 +558,10 @@ function BaselineSlider({ slider, value, onChange }) {
 function BaselineForm({ onClose, onSaved }) {
   const { currentUser } = useAuth();
   const [values, setValues] = useState({
-    selfAwareness: 5,
-    teamLeadership: 5,
-    problemSolving: 5,
-    cultureBuilding: 5,
+    leadershipPurpose: 5,
+    teamAutonomy: 5,
+    reflectionHabit: 5,
+    teamTrust: 5,
   });
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
@@ -590,51 +641,62 @@ function BaselineForm({ onClose, onSaved }) {
  */
 export default function NewEntryModal({ onClose, initialType = null, initialModule = null }) {
   const [type, setType] = useState(initialType);
-  const [saved, setSaved] = useState(false);
-  const [savedLabel, setSavedLabel] = useState('');
+  const [toastMsg, setToastMsg] = useState(null);
 
   const handleSaved = (label) => {
-    setSavedLabel(label || 'Entry saved.');
-    setSaved(true);
+    setToastMsg(label || 'Entry saved ✓');
+    // Auto-close the modal after the toast has shown briefly
+    setTimeout(() => { onClose && onClose(); }, 1800);
   };
 
-  if (saved) {
-    return (
-      <ModalShell onClose={onClose}>
-        <SavedState label={savedLabel} onDone={onClose} />
-      </ModalShell>
-    );
-  }
+  // Render toast above everything while fading out
+  const toastEl = toastMsg
+    ? <Toast message={toastMsg} duration={1800} onDone={() => setToastMsg(null)} />
+    : null;
 
   if (!type) {
-    return <TypePicker onSelect={setType} onClose={onClose} />;
+    return (
+      <>
+        {toastEl}
+        <TypePicker onSelect={setType} onClose={onClose} />
+      </>
+    );
   }
 
   if (type === 'genba-moment') {
     return (
-      <GenbaMomentForm
-        onClose={onClose}
-        onSaved={() => handleSaved('Genba Ikigai Moment saved.')}
-      />
+      <>
+        {toastEl}
+        <GenbaMomentForm
+          onClose={onClose}
+          onSaved={() => handleSaved('Genba Ikigai Moment saved ✓')}
+        />
+      </>
     );
   }
 
   if (type === 'stop-and-think') {
     return (
-      <StopAndThinkForm
-        onClose={onClose}
-        onSaved={() => handleSaved('Reflection saved.')}
-        initialModule={initialModule}
-      />
+      <>
+        {toastEl}
+        <StopAndThinkForm
+          onClose={onClose}
+          onSaved={() => handleSaved('Reflection saved ✓')}
+          initialModule={initialModule}
+        />
+      </>
     );
   }
 
   if (type === 'baseline') {
     return (
-      <BaselineForm
-        onClose={onClose}
-        onSaved={() => handleSaved('Baseline saved.')}
-      />
+      <>
+        {toastEl}
+        <BaselineForm
+          onClose={onClose}
+          onSaved={() => handleSaved('Baseline snapshot saved ✓')}
+        />
+      </>
     );
   }
 

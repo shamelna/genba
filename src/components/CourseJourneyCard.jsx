@@ -115,14 +115,32 @@ export default function CourseJourneyCard({ onboardingComplete, hero = false }) 
           {MODULE_ORDER.map((id) => {
             const status = getModuleStatus(id, progress, currentModuleId);
             const s = STATUS[status];
+            const isCurrent = status === 'current';
+            const isStarted = progress?.[id]?.started && !progress?.[id]?.completed;
             return (
               <button
                 key={id}
                 onClick={() => navigate(`/case-study/${id}`)}
-                className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all hover:opacity-80 ${s.pill}`}
+                className={`flex-shrink-0 flex flex-col items-start px-3 py-1.5 rounded-full text-xs font-medium border transition-all hover:opacity-80 ${s.pill}`}
+                style={{ minWidth: isCurrent ? '88px' : undefined }}
               >
-                <span className="text-xs">{s.icon}</span>
-                <span>{MODULE_LABELS[id]}</span>
+                <div className="flex items-center gap-1.5 w-full">
+                  <span className="text-xs">{s.icon}</span>
+                  <span>{MODULE_LABELS[id]}</span>
+                </div>
+                {isCurrent && isStarted && (
+                  <div className="w-full mt-1 h-0.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,213,89,0.2)' }}>
+                    <div
+                      className="h-full rounded-full"
+                      style={{ width: '40%', background: '#FFD559', opacity: 0.7 }}
+                    />
+                  </div>
+                )}
+                {isCurrent && (
+                  <span className="text-xs mt-0.5 opacity-60 font-normal" style={{ fontSize: '9px', letterSpacing: '0.04em' }}>
+                    {isStarted ? 'In progress' : 'Up next'}
+                  </span>
+                )}
               </button>
             );
           })}
@@ -135,9 +153,16 @@ export default function CourseJourneyCard({ onboardingComplete, hero = false }) 
           <p className="text-gi-mist text-xs uppercase tracking-widest mb-3">Up next</p>
 
           <div className="mb-5">
-            <h3 className="text-gi-white font-medium text-lg leading-tight mb-1">
-              {currentStudy.title}
-            </h3>
+            <div className="flex items-baseline gap-3 mb-1">
+              <h3 className="text-gi-white font-medium text-lg leading-tight">
+                {currentStudy.title}
+              </h3>
+              {progress?.[currentModuleId]?.started && (
+                <span className="text-xs text-gi-mist flex-shrink-0" style={{ fontSize: '10px' }}>
+                  Last visited
+                </span>
+              )}
+            </div>
             <p className="text-gi-horizon text-sm leading-relaxed">
               {currentStudy.teaser}
             </p>

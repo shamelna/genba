@@ -99,9 +99,9 @@ export default function CheckIn() {
   }
 
   return (
-    <div className="min-h-screen bg-gi-deep pb-20">
+    <div className="min-h-screen bg-gi-deep pt-16 pb-6">
       {/* Background */}
-      <div 
+      <div
         className="fixed inset-0 bg-cover bg-center bg-no-repeat opacity-8"
         style={{ backgroundImage: `url(${habitCheckinBg})` }}
       />

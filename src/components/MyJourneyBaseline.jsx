@@ -3,10 +3,10 @@ import { useAuth } from '../contexts/AuthContext';
 import { getBaselineHistory } from '../services/firestoreService';
 
 const DIMENSIONS = [
-  { key: 'selfAwareness',   label: 'Self-Awareness',   color: '#FFD559' },
-  { key: 'teamLeadership',  label: 'Team Leadership',  color: '#4AB3A0' },
-  { key: 'problemSolving',  label: 'Problem-Solving',  color: '#60A5FA' },
-  { key: 'cultureBuilding', label: 'Culture Building', color: '#A78BFA' },
+  { key: 'leadershipPurpose', label: 'Leadership Purpose',     color: '#FFD559' },
+  { key: 'teamAutonomy',      label: 'Team Autonomy',          color: '#4AB3A0' },
+  { key: 'reflectionHabit',   label: 'Self-Reflection Habit',  color: '#60A5FA' },
+  { key: 'teamTrust',         label: 'Team Trust',             color: '#A78BFA' },
 ];
 
 // ── Helper: format a Firestore Timestamp or ISO string ────────────────────────

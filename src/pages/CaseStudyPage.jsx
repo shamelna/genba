@@ -73,6 +73,7 @@ export default function CaseStudyPage() {
 
   const [visibleCount, setVisibleCount] = useState(1);
   const [showReflection, setShowReflection] = useState(false);
+  const [showChecklist, setShowChecklist] = useState(false);
   const [progress, setProgress] = useState(null);
   const [loadingProgress, setLoadingProgress] = useState(true);
 
@@ -147,7 +148,9 @@ export default function CaseStudyPage() {
     } catch (err) {
       console.error('Error saving reflection:', err);
     }
-    navigate(`/journal?newEntry=true&module=${moduleId}`);
+    // Show completion checklist before navigating to journal
+    setShowReflection(false);
+    setShowChecklist(true);
   };
 
   if (showReflection) {
@@ -157,6 +160,116 @@ export default function CaseStudyPage() {
         onSave={handleReflectionSave}
         onBack={() => setShowReflection(false)}
       />
+    );
+  }
+
+  if (showChecklist) {
+    const entryType = study.journalEntryType || 'genba-moment';
+    const checklistItems = [
+      {
+        label: 'Complete onboarding',
+        done: true,
+      },
+      {
+        label: `Read ${study.moduleLabel} case study and answer reflection questions`,
+        done: true,
+      },
+      {
+        label: 'Record a Genba Ikigai Moment and set your baseline scores',
+        done: false,
+        cta: 'Record now →',
+        ctaAction: () => navigate(`/journal?newEntry=true&type=${entryType}&module=${moduleId}`),
+      },
+      {
+        label: 'Complete the knowledge check quiz',
+        done: false,
+        cta: 'Open quiz ↗',
+        ctaAction: () => window.open('https://genbaacademy.com/quiz', '_blank'),
+      },
+    ];
+
+    return (
+      <div
+        className="min-h-screen flex flex-col items-center justify-center px-6"
+        style={{ background: '#0e1c28' }}
+      >
+        <div
+          className="w-full flex flex-col"
+          style={{ maxWidth: '560px', background: '#1C2B3A', borderRadius: '16px', overflow: 'hidden' }}
+        >
+          {/* Header */}
+          <div className="px-6 pt-8 pb-5" style={{ borderBottom: '1px solid rgba(46,65,86,0.6)' }}>
+            <div className="flex items-center gap-3 mb-3">
+              <span className="text-2xl">🎯</span>
+              <h2 className="text-xl font-light text-gi-white tracking-wide">
+                Week 1 — Completion Checklist
+              </h2>
+            </div>
+            <p className="text-gi-horizon text-sm leading-relaxed">
+              Your workbook has four activities for this module. Here's where you are.
+            </p>
+          </div>
+
+          {/* Checklist items */}
+          <div className="flex flex-col gap-0 px-6 py-5">
+            {checklistItems.map((item, idx) => (
+              <div
+                key={idx}
+                className="flex items-start gap-4 py-4"
+                style={{ borderBottom: idx < checklistItems.length - 1 ? '1px solid rgba(46,65,86,0.4)' : 'none' }}
+              >
+                {/* Checkbox */}
+                <div
+                  className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center mt-0.5"
+                  style={{
+                    background: item.done ? 'rgba(74,179,160,0.15)' : 'rgba(74,100,120,0.2)',
+                    border: `2px solid ${item.done ? '#4AB3A0' : 'rgba(74,100,120,0.5)'}`,
+                  }}
+                >
+                  {item.done && (
+                    <span style={{ color: '#4AB3A0', fontSize: '11px', fontWeight: 700 }}>✓</span>
+                  )}
+                </div>
+
+                {/* Label + CTA */}
+                <div className="flex-1 min-w-0">
+                  <p
+                    className="text-sm leading-snug"
+                    style={{ color: item.done ? '#7A9BB0' : '#E8EFF5' }}
+                  >
+                    {item.label}
+                  </p>
+                  {!item.done && item.cta && (
+                    <button
+                      onClick={item.ctaAction}
+                      className="mt-2 text-xs font-medium transition-opacity hover:opacity-80"
+                      style={{ color: '#FFD559' }}
+                    >
+                      {item.cta}
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Footer */}
+          <div className="px-6 pb-6 flex flex-col gap-3">
+            <button
+              onClick={() => navigate(`/journal?newEntry=true&type=${entryType}&module=${moduleId}`)}
+              className="w-full bg-gi-gold text-gi-deep font-semibold py-4 rounded-gi hover:opacity-90 transition-opacity"
+            >
+              Record Genba Moment →
+            </button>
+            <button
+              onClick={() => navigate('/home')}
+              className="w-full text-gi-horizon text-sm py-2 hover:text-gi-white transition-colors"
+            >
+              Back to home
+            </button>
+          </div>
+        </div>
+      </div>
     );
   }
 
@@ -238,6 +351,49 @@ export default function CaseStudyPage() {
               isNew={i === visibleCount - 1}
             />
           ))}
+
+          {/* PDCA card — appears after the last scene */}
+          {isOnLastScene && (
+            <div
+              className="mx-4 my-5 rounded-gi p-5"
+              style={{
+                background: 'rgba(255,213,89,0.06)',
+                border: '1px solid rgba(255,213,89,0.2)',
+                animation: 'fadeIn 0.5s ease',
+              }}
+            >
+              <p
+                className="text-xs font-semibold uppercase tracking-widest mb-3"
+                style={{ color: '#FFD559', letterSpacing: '0.12em' }}
+              >
+                PDCA — Your Next Step
+              </p>
+              <div className="flex flex-col gap-3">
+                {[
+                  { letter: 'P', label: 'Plan', prompt: 'What one leadership behaviour will you change this week?' },
+                  { letter: 'D', label: 'Do', prompt: 'When and where will you practise it?' },
+                  { letter: 'C', label: 'Check', prompt: 'How will you know if it worked?' },
+                  { letter: 'A', label: 'Act', prompt: 'What will you do differently if it didn\'t work?' },
+                ].map(({ letter, label, prompt }) => (
+                  <div key={letter} className="flex items-start gap-3">
+                    <div
+                      className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold"
+                      style={{ background: 'rgba(255,213,89,0.15)', color: '#FFD559' }}
+                    >
+                      {letter}
+                    </div>
+                    <div>
+                      <p className="text-gi-white text-xs font-semibold mb-0.5">{label}</p>
+                      <p className="text-gi-horizon text-xs leading-snug">{prompt}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-gi-mist text-xs mt-4 italic">
+                You can record your answers as a Genba Moment in your journal.
+              </p>
+            </div>
+          )}
 
           {/* Breathing room so last bubble isn't hidden by sticky button */}
           <div style={{ height: '80px' }} />

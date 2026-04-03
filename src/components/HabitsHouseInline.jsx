@@ -112,20 +112,20 @@ function HabitPopup({ active, onEnter, onLeave, onClose }) {
 
 // ─── Habit tile ────────────────────────────────────────────────────────────────
 
-function HabitTile({ habit, isActive, onEnter, onLeave, onTap }) {
+function HabitTile({ habit, isActive, isHighlighted, onEnter, onLeave, onTap }) {
   return (
     <div
       onMouseEnter={() => onEnter(habit)}
       onMouseLeave={onLeave}
       onClick={() => onTap(habit)}
       style={{
-        background: isActive ? '#3A5269' : '#253545',
-        border: `1px solid ${isActive ? '#FFD559' : '#3A5269'}`,
+        background: isActive ? '#3A5269' : isHighlighted ? 'rgba(255,213,89,0.08)' : '#253545',
+        border: `1px solid ${isActive ? '#FFD559' : isHighlighted ? 'rgba(255,213,89,0.4)' : '#3A5269'}`,
         borderRadius: 7,
         padding: '5px 5px',
         cursor: 'pointer',
         transition: 'background 0.12s, border-color 0.12s',
-        boxShadow: isActive ? '0 0 8px rgba(255,213,89,0.25)' : 'none',
+        boxShadow: isActive ? '0 0 8px rgba(255,213,89,0.25)' : isHighlighted ? '0 0 5px rgba(255,213,89,0.1)' : 'none',
         userSelect: 'none',
         textAlign: 'center',
       }}
@@ -143,28 +143,28 @@ function HabitTile({ habit, isActive, onEnter, onLeave, onTap }) {
 
 // ─── Pillar header ─────────────────────────────────────────────────────────────
 
-function PillarTile({ icon, label, info, isActive, onEnter, onLeave, onTap }) {
+function PillarTile({ icon, label, info, isActive, isHighlighted, onEnter, onLeave, onTap }) {
   return (
     <div
       onMouseEnter={() => onEnter(info)}
       onMouseLeave={onLeave}
       onClick={() => onTap(info)}
       style={{
-        background: isActive ? '#3A5269' : '#1E3040',
-        border: `1px solid ${isActive ? '#FFD559' : '#2E4156'}`,
+        background: isActive ? '#3A5269' : isHighlighted ? 'rgba(255,213,89,0.1)' : '#1E3040',
+        border: `1px solid ${isActive ? '#FFD559' : isHighlighted ? 'rgba(255,213,89,0.45)' : '#2E4156'}`,
         borderRadius: 7,
         padding: '5px 4px',
         textAlign: 'center',
         cursor: 'pointer',
         transition: 'background 0.12s, border-color 0.12s',
-        boxShadow: isActive ? '0 0 8px rgba(255,213,89,0.25)' : 'none',
+        boxShadow: isActive ? '0 0 8px rgba(255,213,89,0.25)' : isHighlighted ? '0 0 6px rgba(255,213,89,0.15)' : 'none',
         userSelect: 'none',
         marginBottom: 4,
       }}
     >
       <div style={{ fontSize: 11, marginBottom: 2 }}>{icon}</div>
       <div style={{
-        fontSize: 7.5, fontWeight: 800, color: '#E8EFF5',
+        fontSize: 7.5, fontWeight: 800, color: isHighlighted ? '#FFD559' : '#E8EFF5',
         letterSpacing: '0.06em', textTransform: 'uppercase',
         lineHeight: 1.3, whiteSpace: 'pre-line',
       }}>
@@ -178,7 +178,7 @@ function PillarTile({ icon, label, info, isActive, onEnter, onLeave, onTap }) {
 // At inline widths the overlapping absolute layout becomes unreadable.
 // Use a clean 2×2 grid with a faint decorative ring in the background.
 
-function CultureCircle({ habits, onEnter, onLeave, onTap, activeId }) {
+function CultureCircle({ habits, onEnter, onLeave, onTap, activeId, isHighlighted }) {
   const order = ['topLeft', 'topRight', 'bottomLeft', 'bottomRight'];
   const byQ = {};
   habits.forEach(h => { byQ[h.quadrant] = h; });
@@ -210,6 +210,7 @@ function CultureCircle({ habits, onEnter, onLeave, onTap, activeId }) {
           if (!h) return null;
           return (
             <HabitTile key={h.id} habit={h} isActive={activeId === h.id}
+              isHighlighted={isHighlighted}
               onEnter={onEnter} onLeave={onLeave} onTap={onTap} />
           );
         })}
@@ -218,11 +219,24 @@ function CultureCircle({ habits, onEnter, onLeave, onTap, activeId }) {
   );
 }
 
+// ─── Module → highlighted section mapping ────────────────────────────────────
+// Maps a moduleId to which habits/pillar should show the amber "active" ring
+const MODULE_HIGHLIGHT = {
+  'introduction':    'foundation',   // habits 1-4
+  'leading-self':    'foundation',   // habits 1-4
+  'leading-tribe':   'tribe',        // habits 5-8
+  'problem-solving': 'problemSolving', // habits 9-12
+  'culture-change':  'culture',      // habits 13-16
+};
+
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
-export default function HabitsHouseInline() {
+export default function HabitsHouseInline({ currentModuleId }) {
   const [active, setActive] = useState(null);
   const timerRef = useRef(null);
+
+  // Which section to auto-highlight based on the student's active module
+  const highlightSection = currentModuleId ? MODULE_HIGHLIGHT[currentModuleId] : null;
 
   // Shared helpers — any enter cancels the pending close, any leave starts it.
   // 280ms delay is long enough to cross between adjacent elements comfortably.
@@ -257,7 +271,18 @@ export default function HabitsHouseInline() {
           <p style={{ fontSize: 9.5, color: '#7A9BB0', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
             16 Leadership Habits
           </p>
-          <p style={{ fontSize: 8.5, color: '#4A6478' }}>Tap or hover to explore</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            {highlightSection && (
+              <span style={{
+                fontSize: 7.5, color: '#FFD559', fontWeight: 700,
+                background: 'rgba(255,213,89,0.12)', border: '1px solid rgba(255,213,89,0.3)',
+                borderRadius: 4, padding: '1px 5px', letterSpacing: '0.05em',
+              }}>
+                YOUR MODULE
+              </span>
+            )}
+            <p style={{ fontSize: 8.5, color: '#4A6478' }}>Tap or hover to explore</p>
+          </div>
         </div>
 
         {/* Roof */}
@@ -276,7 +301,8 @@ export default function HabitsHouseInline() {
 
           {/* Left — Tribe */}
           <div style={{
-            background: '#192838', border: '1px solid #253545',
+            background: '#192838',
+            border: `1px solid ${highlightSection === 'tribe' ? 'rgba(255,213,89,0.35)' : '#253545'}`,
             borderRadius: 8, padding: '5px 4px',
             display: 'flex', flexDirection: 'column', gap: 3,
           }}>
@@ -284,17 +310,20 @@ export default function HabitsHouseInline() {
               icon="⭐" label={'Leading\nTribe'}
               info={PILLAR_INFO.tribe}
               isActive={active === PILLAR_INFO.tribe}
+              isHighlighted={highlightSection === 'tribe'}
               onEnter={enter} onLeave={leave} onTap={tap}
             />
             {TRIBE.map(h => (
               <HabitTile key={h.id} habit={h} isActive={activeId === h.id}
+                isHighlighted={highlightSection === 'tribe'}
                 onEnter={enter} onLeave={leave} onTap={tap} />
             ))}
           </div>
 
           {/* Centre — Culture Change */}
           <div style={{
-            background: '#192838', border: '1px solid #253545',
+            background: '#192838',
+            border: `1px solid ${highlightSection === 'culture' ? 'rgba(255,213,89,0.35)' : '#253545'}`,
             borderRadius: 8, padding: '5px 4px',
             display: 'flex', flexDirection: 'column',
           }}>
@@ -302,17 +331,20 @@ export default function HabitsHouseInline() {
               icon="🌱" label={'Culture\nChange'}
               info={PILLAR_INFO.culture}
               isActive={active === PILLAR_INFO.culture}
+              isHighlighted={highlightSection === 'culture'}
               onEnter={enter} onLeave={leave} onTap={tap}
             />
             <CultureCircle
               habits={CULTURE} activeId={activeId}
+              isHighlighted={highlightSection === 'culture'}
               onEnter={enter} onLeave={leave} onTap={tap}
             />
           </div>
 
           {/* Right — Problem Solving */}
           <div style={{
-            background: '#192838', border: '1px solid #253545',
+            background: '#192838',
+            border: `1px solid ${highlightSection === 'problemSolving' ? 'rgba(255,213,89,0.35)' : '#253545'}`,
             borderRadius: 8, padding: '5px 4px',
             display: 'flex', flexDirection: 'column', gap: 3,
           }}>
@@ -320,10 +352,12 @@ export default function HabitsHouseInline() {
               icon="💡" label={'Problem\nSolving'}
               info={PILLAR_INFO.problemSolving}
               isActive={active === PILLAR_INFO.problemSolving}
+              isHighlighted={highlightSection === 'problemSolving'}
               onEnter={enter} onLeave={leave} onTap={tap}
             />
             {PROBLEM_SOLVING.map(h => (
               <HabitTile key={h.id} habit={h} isActive={activeId === h.id}
+                isHighlighted={highlightSection === 'problemSolving'}
                 onEnter={enter} onLeave={leave} onTap={tap} />
             ))}
           </div>
@@ -331,18 +365,21 @@ export default function HabitsHouseInline() {
 
         {/* Foundation */}
         <div style={{
-          background: '#192838', border: '1px solid #253545',
+          background: '#192838',
+          border: `1px solid ${highlightSection === 'foundation' ? 'rgba(255,213,89,0.35)' : '#253545'}`,
           borderRadius: 8, padding: '5px 7px',
         }}>
           <PillarTile
             icon="🧠" label="Leading Self — THE FOUNDATION"
             info={PILLAR_INFO.foundation}
             isActive={active === PILLAR_INFO.foundation}
+            isHighlighted={highlightSection === 'foundation'}
             onEnter={enter} onLeave={leave} onTap={tap}
           />
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 4 }}>
             {FOUNDATION.map(h => (
               <HabitTile key={h.id} habit={h} isActive={activeId === h.id}
+                isHighlighted={highlightSection === 'foundation'}
                 onEnter={enter} onLeave={leave} onTap={tap} />
             ))}
           </div>

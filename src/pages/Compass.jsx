@@ -157,9 +157,9 @@ Generated: ${new Date().toLocaleDateString()}
   ];
 
   return (
-    <div className="min-h-screen bg-gi-deep pb-20">
+    <div className="min-h-screen bg-gi-deep pt-16 pb-6">
       {/* Background */}
-      <div 
+      <div
         className="fixed inset-0 bg-cover bg-center bg-no-repeat opacity-15"
         style={{ backgroundImage: `url(${compassBg})` }}
       />

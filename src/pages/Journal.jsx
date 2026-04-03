@@ -390,11 +390,11 @@ export default function Journal() {
         />
       )}
 
-      <div className="min-h-screen bg-gi-deep pb-24">
+      <div className="min-h-screen bg-gi-deep pt-16 pb-6">
 
         {/* ── Page header ────────────────────────────────────────────────────── */}
         <div
-          className="px-5 pt-10 pb-5"
+          className="px-5 pt-6 pb-5"
           style={{ borderBottom: '1px solid rgba(46,65,86,0.5)' }}
         >
           <div className="flex items-end justify-between mb-5">

@@ -250,12 +250,14 @@ export default function Onboarding() {
           <div className="flex items-center gap-5 mb-4">
             <SarahAvatar size={64} />
             <div>
-              <p className="text-gi-white font-semibold text-xl">Sarah</p>
-              <p className="text-gi-horizon text-sm italic">The Leader</p>
+              <p className="text-gi-white font-semibold text-xl">Sarah Chen</p>
+              <p className="text-gi-horizon text-sm italic">Production Manager</p>
             </div>
           </div>
           <p className="text-gi-horizon text-sm leading-relaxed">
-            8 years experience. Works 70-hour weeks. Brilliant — but stuck.
+            Eight years in production management. Highly competent, deeply trusted, and quietly exhausted.
+            She has built a team that depends on her for everything — and she is only now beginning to
+            see what that cost.
           </p>
         </div>
 
@@ -264,12 +266,14 @@ export default function Onboarding() {
           <div className="flex items-center gap-5 mb-4">
             <KenjiAvatar size={64} />
             <div>
-              <p className="text-gi-white font-semibold text-xl">Kenji</p>
-              <p className="text-gi-horizon text-sm italic">The Sensei</p>
+              <p className="text-gi-white font-semibold text-xl">Kenji Tanaka</p>
+              <p className="text-gi-horizon text-sm italic">Genba Coach</p>
             </div>
           </div>
           <p className="text-gi-horizon text-sm leading-relaxed">
-            30 years at the Genba. He never gives answers. He asks questions.
+            An external Genba coach with decades of experience walking production floors.
+            He carries no slides and asks more than he answers. His questions have a way of
+            surfacing what leaders already know — but haven't yet been willing to see.
           </p>
         </div>
       </div>
