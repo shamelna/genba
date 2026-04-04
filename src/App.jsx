@@ -12,6 +12,7 @@ import Onboarding from './pages/Onboarding.jsx';
 import Home from './pages/Home.jsx';
 import CheckIn from './pages/CheckIn.jsx';
 import Progress from './pages/Progress.jsx';
+import LearningDashboard from './pages/LearningDashboard.jsx';
 import Compass from './pages/Compass.jsx';
 import Journal from './pages/Journal.jsx';
 import Settings from './pages/Settings.jsx';
@@ -43,6 +44,10 @@ function App() {
                 <Route 
                   path="/progress" 
                   element={<ProtectedRoute><Progress /></ProtectedRoute>}
+                />
+                <Route 
+                  path="/dashboard" 
+                  element={<ProtectedRoute><LearningDashboard /></ProtectedRoute>}
                 />
                 <Route 
                   path="/compass" 

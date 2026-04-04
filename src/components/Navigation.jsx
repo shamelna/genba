@@ -26,7 +26,7 @@ export default function Navigation() {
           activeOverride: isCaseStudyActive,
         }]
       : []),
-    { path: '/progress', label: 'Progress', icon: '📊' },
+    { path: '/dashboard', label: 'Dashboard', icon: '📊' },
     {
       path: '/compass',
       label: 'Compass',
