@@ -118,12 +118,12 @@ export const saveWeeklyIntention = async (uid, intentionData) => {
   });
 };
 
-export const getWeeklyIntentions = async (uid, limit = 12) => {
+export const getWeeklyIntentions = async (uid, limitCount = 12) => {
   const intentionsRef = collection(db, 'users', uid, 'intentions');
   const q = query(
     intentionsRef,
     orderBy('weekKey', 'desc'),
-    limit(limit)
+    limit(limitCount)
   );
   
   const snapshot = await getDocs(q);

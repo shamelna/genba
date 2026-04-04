@@ -107,6 +107,10 @@ export default function CaseStudyPage() {
     load();
   }, [currentUser, moduleId]);
 
+  // Declare scenes early to avoid initialization error
+  const scenes = study?.scenes || [];
+  const totalScenes = scenes.length;
+
   // Scroll to bottom when new scene appears
   useEffect(() => {
     if (threadRef.current) {
@@ -127,7 +131,7 @@ export default function CaseStudyPage() {
 
   // In review mode, show all scenes at once
   useEffect(() => {
-    if (isReviewMode && scenes && scenes.length > 0) {
+    if (isReviewMode && scenes.length > 0) {
       setVisibleCount(scenes.length);
     }
   }, [isReviewMode, scenes]);
@@ -159,8 +163,6 @@ export default function CaseStudyPage() {
     return <ComingSoon moduleLabel={study.moduleLabel} onBack={() => navigate('/home')} />;
   }
 
-  const scenes = study.scenes;
-  const totalScenes = scenes.length;
   const isOnLastScene = visibleCount >= totalScenes;
   const isCompleted = progress?.[moduleId]?.completed === true;
   const completionDate = progress?.[moduleId]?.completedAt;
