@@ -136,7 +136,7 @@ function truncate(text, max = 110) {
 function formatDate(val) {
   if (!val) return '';
   let d;
-  if (val?.toDate) d = val.toDate();
+  if (val && val.toDate) d = val.toDate();
   else if (typeof val === 'string') d = new Date(val);
   else d = new Date(val);
   return d.toLocaleDateString('en-US', {

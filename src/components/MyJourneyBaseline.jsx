@@ -13,7 +13,7 @@ const DIMENSIONS = [
 function formatDate(ts) {
   if (!ts) return '—';
   let d;
-  if (ts?.toDate) {
+  if (ts && ts.toDate) {
     d = ts.toDate();
   } else if (typeof ts === 'string') {
     d = new Date(ts);
