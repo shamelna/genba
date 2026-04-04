@@ -314,16 +314,17 @@ export const saveCaseStudyReflection = async (uid, moduleId, reflectionAnswers) 
 // Get the latest reflection answers for a specific module
 export const getCaseStudyReflection = async (uid, moduleId) => {
   const reflectionsRef = collection(db, 'users', uid, 'reflections');
-  const q = query(
-    reflectionsRef,
-    where('moduleId', '==', moduleId),
-    orderBy('createdAt', 'desc'),
-    limit(1)
-  );
+  const q = query(reflectionsRef, where('moduleId', '==', moduleId));
   const snapshot = await getDocs(q);
   if (snapshot.empty) return null;
-  const doc = snapshot.docs[0];
-  return { id: doc.id, ...doc.data() };
+  
+  // Find the most recent reflection by sorting manually
+  const reflections = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  return reflections.reduce((latest, current) => {
+    const latestTime = latest.createdAt?.toMillis ? latest.createdAt.toMillis() : 0;
+    const currentTime = current.createdAt?.toMillis ? current.createdAt.toMillis() : 0;
+    return currentTime > latestTime ? current : latest;
+  }, reflections[0]);
 };
 
 // Save a full journal entry with case study reflection data
