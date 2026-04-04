@@ -463,7 +463,7 @@ export default function LearningDashboard() {
                   : '2px solid rgba(74,100,120,0.3)',
               }}
             >
-              <span className="mr-2">{tab.icon}</span>
+              <span className="mr-2 text-lg">{tab.icon}</span>
               {tab.label}
             </button>
           ))}

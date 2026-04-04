@@ -80,7 +80,7 @@ export default function Navigation() {
                       : 'text-gi-mist hover:text-gi-white'
                 }`}
               >
-                <span className="text-xl mb-1">{item.icon}</span>
+                <span className="text-2xl mb-1">{item.icon}</span>
                 <span className="text-xs">{item.label}</span>
                 {isActive && (
                   <div className="w-1 h-1 bg-gi-gold rounded-full mt-1"></div>
