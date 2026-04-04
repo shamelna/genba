@@ -122,6 +122,11 @@ function ProgressTab({ habitAverages, timeRange, setTimeRange }) {
 }
 
 function JournalTab({ entries, activeFilter, setActiveFilter, canAccessCompass }) {
+  // Filter entries based on active filter
+  const filteredEntries = activeFilter === 'all' 
+    ? entries 
+    : entries.filter(e => e.type === activeFilter);
+
   const ALL_FILTERS = [
     { key: 'all', label: 'All' },
     { key: 'genba-moment', label: 'Moments' },
@@ -242,9 +247,9 @@ function JournalTab({ entries, activeFilter, setActiveFilter, canAccessCompass }
       </div>
 
       {/* Entry list */}
-      {entries.length > 0 ? (
+      {filteredEntries.length > 0 ? (
         <div className="space-y-0">
-          {entries.map((entry, i) => (
+          {filteredEntries.map((entry, i) => (
             <EntryCard key={`${entry.type}-${entry.id || i}`} entry={entry} />
           ))}
         </div>
@@ -415,15 +420,6 @@ export default function LearningDashboard() {
 
     loadData();
   }, [currentUser, timeRange]);
-
-  useEffect(() => {
-    if (activeTab === 'journal') {
-      const filtered = activeFilter === 'all' 
-        ? entries 
-        : entries.filter(e => e.type === activeFilter);
-      // Update filtered entries
-    }
-  }, [activeFilter, entries, activeTab]);
 
   if (loading) {
     return (
