@@ -102,7 +102,18 @@ export default function CaseStudyPage() {
   // Scroll to bottom when new scene appears
   useEffect(() => {
     if (threadRef.current) {
-      threadRef.current.scrollTop = threadRef.current.scrollHeight;
+      // Use scrollIntoView for more reliable scrolling
+      const scrollToBottom = () => {
+        const element = threadRef.current;
+        element.scrollTo({
+          top: element.scrollHeight,
+          left: 0,
+          behavior: 'smooth'
+        });
+      };
+      
+      // Small delay to ensure content is rendered
+      setTimeout(scrollToBottom, 100);
     }
   }, [visibleCount]);
 
@@ -140,6 +151,17 @@ export default function CaseStudyPage() {
   const handleContinue = () => {
     if (isOnLastScene) setShowReflection(true);
     else setVisibleCount(c => Math.min(c + 1, totalScenes));
+    
+    // Immediate scroll to bottom on button click
+    if (threadRef.current) {
+      setTimeout(() => {
+        threadRef.current.scrollTo({
+          top: threadRef.current.scrollHeight,
+          left: 0,
+          behavior: 'smooth'
+        });
+      }, 50);
+    }
   };
 
   const handleReflectionSave = async (answers) => {
