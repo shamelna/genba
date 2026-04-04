@@ -7,7 +7,8 @@ import {
   getJournalEntries, 
   calculateHabitAverages, 
   getHabitCheckins,
-  getCourseProgress 
+  getCourseProgress,
+  getCaseStudyReflection
 } from '../services/firestoreService';
 import { habitsData } from '../data/habitsData';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';

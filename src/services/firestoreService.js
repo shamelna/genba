@@ -311,6 +311,21 @@ export const saveCaseStudyReflection = async (uid, moduleId, reflectionAnswers) 
   });
 };
 
+// Get the latest reflection answers for a specific module
+export const getCaseStudyReflection = async (uid, moduleId) => {
+  const reflectionsRef = collection(db, 'users', uid, 'reflections');
+  const q = query(
+    reflectionsRef,
+    where('moduleId', '==', moduleId),
+    orderBy('createdAt', 'desc'),
+    limit(1)
+  );
+  const snapshot = await getDocs(q);
+  if (snapshot.empty) return null;
+  const doc = snapshot.docs[0];
+  return { id: doc.id, ...doc.data() };
+};
+
 // Save a full journal entry with case study reflection data
 export const saveJournalEntryWithReflection = async (uid, moduleId, entryData) => {
   const entryId = `cs-${moduleId}-${Date.now()}`;

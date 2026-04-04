@@ -6,6 +6,7 @@ import {
   getCourseProgress,
   markModuleStarted,
   saveCaseStudyReflection,
+  getCaseStudyReflection,
 } from '../services/firestoreService';
 import CaseStudyScene from '../components/CaseStudyScene';
 import ReflectionPanel from '../components/ReflectionPanel';
@@ -79,6 +80,7 @@ export default function CaseStudyPage() {
   const [isReviewMode, setIsReviewMode] = useState(false);
   const [showReflectionSummary, setShowReflectionSummary] = useState(false);
   const [reviewMode, setReviewMode] = useState('story'); // 'story' | 'reflection' | 'insights'
+  const [savedReflection, setSavedReflection] = useState(null);
 
   const study = caseStudies[moduleId];
 
@@ -93,6 +95,12 @@ export default function CaseStudyPage() {
         // Check if this is a completed module
         const isCompleted = p?.[moduleId]?.completed === true;
         setIsReviewMode(isCompleted);
+        
+        // Load saved reflection if completed
+        if (isCompleted) {
+          const reflection = await getCaseStudyReflection(currentUser.uid, moduleId);
+          setSavedReflection(reflection);
+        }
         
         if (study && !study.comingSoon && !p?.[moduleId]?.started) {
           await markModuleStarted(currentUser.uid, moduleId);
@@ -346,15 +354,24 @@ export default function CaseStudyPage() {
             <div className="mb-6">
               <p className="text-gi-white text-sm font-medium mb-3">Your Responses</p>
               <div className="space-y-4">
-                {study.reflectionQuestions.map((question, i) => (
-                  <div key={i} className="gi-card p-4">
-                    <p className="text-gi-white text-sm font-medium mb-2">{question}</p>
-                    <div className="text-gi-mist text-xs italic">
-                      <p>Your answer would appear here...</p>
-                      <p className="mt-2 text-gi-slate">(Note: Reflection storage integration needed)</p>
+                {study.reflectionQuestions.map((question, i) => {
+                  const answer = savedReflection?.reflectionAnswers?.[i]?.answer;
+                  return (
+                    <div key={i} className="gi-card p-4">
+                      <p className="text-gi-white text-sm font-medium mb-2">{question}</p>
+                      <div className="text-gi-horizon text-sm italic">
+                        {answer ? (
+                          <p>"{answer}"</p>
+                        ) : (
+                          <div>
+                            <p className="text-gi-slate">No answer recorded</p>
+                            <p className="text-xs mt-1">Complete the reflection to see your response here</p>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
