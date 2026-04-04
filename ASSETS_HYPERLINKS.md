@@ -49,8 +49,8 @@ Vercel uses **hashed filenames** for assets in production. The actual filenames 
 ### New Images Folder
 ```html
 <!-- New Images Added -->
-<img src="https://genba.kaizenacademy.education/assets/Images/Genba Ikigai.png" alt="Genba Ikigai">
-<img src="https://genba.kaizenacademy.education/assets/Images/PDCA.png" alt="PDCA Cycle">
+<img src="https://genba.kaizenacademy.education/Genba Ikigai.png" alt="Genba Ikigai">
+<img src="https://genba.kaizenacademy.education/PDCA.png" alt="PDCA Cycle">
 ```
 
 ## Asset Categories & Usage
@@ -159,7 +159,7 @@ https://genba.kaizenacademy.education/assets/hero-book-floating-water-b5f617eb.j
 https://genba.kaizenacademy.education/app-logo.png
 
 <!-- PDCA Diagram -->
-https://genba.kaizenacademy.education/assets/Images/PDCA.png
+https://genba.kaizenacademy.education/PDCA.png
 
 <!-- Red Bus Card -->
 https://genba.kaizenacademy.education/assets/red-bus-card-bbe6d9d0.jpg

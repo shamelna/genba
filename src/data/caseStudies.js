@@ -34,54 +34,66 @@ export const caseStudies = {
       { type: 'act', label: 'Act 1 — The Arrival' },
       {
         type: 'narrator',
-        text: 'Monday morning. 7:52 a.m. The factory floor hums with the first shift. Sarah Chen has been production manager here for eight years. She has heard of Genba coaches — consultants who walk the floor instead of filling in forms. She is not sure what to expect.',
+        text: 'Monday morning. A manufacturing facility somewhere in Europe. The kind of place that has been running for thirty years and feels it.',
       },
       {
         type: 'narrator',
-        text: 'Kenji Tanaka arrives with no laptop, no clipboard, no slide deck. He carries a small notebook and a cup of tea.',
+        text: 'Sarah Chen has been the production manager here for eight years. She arrived at 6:45 this morning, as she does every morning. There are already three people waiting outside her office with questions.',
       },
       {
         type: 'sarah',
-        text: 'Welcome. I have set up the conference room — I can walk you through our KPIs, the last three months of output data, and our improvement roadmap.',
+        text: 'Not now — give me ten minutes. I need to check the night shift numbers first.',
       },
       {
-        type: 'kenji',
-        text: 'Thank you, Sarah. Before we do that — would you take me to the floor?',
+        type: 'narrator',
+        text: 'Kenji Tanaka has been brought in by the company as an external Genba coach. He is 58 years old. He has worked in lean leadership for 31 years, beginning at Toyota UK and then independently across 140 organisations in 22 countries. He carries nothing with him except a small notebook and a pen.',
+      },
+      {
+        type: 'narrator',
+        text: 'He arrives at 8:00. Sarah is in her office. She has been there since 6:45 and has already answered eleven messages, resolved a supplier delivery issue, and attended one unscheduled stand-up on the floor. She stands up to greet him.',
       },
       {
         type: 'sarah',
-        text: "Of course. Though I should mention — I have a presentation to finalise this afternoon. Can we keep it reasonably brief?",
+        text: 'Mr Tanaka. Good to meet you. I hope you found us without trouble.',
       },
       {
         type: 'kenji',
-        text: "We can walk at your pace. You don't need to explain anything. I just want to see.",
+        text: 'I did. Thank you. Before we sit down — could we walk first?',
+      },
+      {
+        type: 'sarah',
+        text: 'Of course. I can show you around and explain how we operate. Give me one moment to print the production summary —',
+      },
+      {
+        type: 'kenji',
+        text: 'No need for the summary. I would just like to walk.',
+      },
+      {
+        type: 'narrator',
+        text: 'Sarah pauses. She is not used to someone declining information. She puts the document down.',
+      },
+      {
+        type: 'sarah',
+        text: 'All right. Follow me.',
       },
 
       // ── Act 2: The Walk ────────────────────────────────────────────────────
       { type: 'act', label: 'Act 2 — The Walk' },
       {
         type: 'narrator',
-        text: 'They step onto the production floor. Kenji does not rush. He pauses at a workstation where two operators are standing idle, watching a quality alert on a screen. He says nothing. He watches.',
+        text: 'They walk the production floor together. Kenji moves slowly. He stops frequently. He says almost nothing.',
       },
       {
         type: 'narrator',
-        text: 'Three minutes pass. One of the operators glances toward the office. Then back at the screen. Then toward the office again.',
-      },
-      {
-        type: 'sarah',
-        text: "They're waiting for me to sign off on the deviation. It's faster if I just do it — they know that.",
-      },
-      {
-        type: 'kenji',
-        text: 'How long have they known that?',
-      },
-      {
-        type: 'sarah',
-        text: "I don't know. A while. It works.",
+        text: 'Sarah fills the silence. She explains the layout, the throughput targets, the shift structure, the current quality challenge on Line 4. Kenji listens. He does not take notes.',
       },
       {
         type: 'narrator',
-        text: 'They continue walking. Kenji stops at the visual management board — a large wall of laminated sheets, handwritten notes, printed targets. He reads it slowly.',
+        text: 'After several minutes, Kenji stops beside a visual management board. It is covered in handwritten notes. Several positions are crossed out. Two sticky notes have fallen and are lying on the floor beneath it.',
+      },
+      {
+        type: 'narrator',
+        text: 'He asks himself the following questions: I wonder who is the owner of this board? How often do they meet at the board? Who runs the meetings? Does the person running the meeting know what the process and behavioural goals and tasks are of this very important meeting? By just examining the board, it seems the board maybe just expensive wall paper that is seldom used. There certainly is no 5S at this board.',
       },
       {
         type: 'kenji',
@@ -89,127 +101,207 @@ export const caseStudies = {
       },
       {
         type: 'sarah',
-        text: 'I do. Every morning. The team knows where to look.',
-      },
-      {
-        type: 'kenji',
-        text: 'And if you are not here in the morning?',
-      },
-      {
-        type: 'sarah',
-        text: "I'm always here in the morning.",
+        text: 'I do, mostly. Or my deputy when I am not here. We update it each morning.',
       },
       {
         type: 'narrator',
-        text: 'In the far corner of the floor, a young team member is working through a recurring fault on her own — reworking parts by hand, checking each one against a printed specification. She does not call for help. She does not flag it on the board. She just works.',
-      },
-      {
-        type: 'kenji',
-        text: "She's been doing that for a while.",
-      },
-      {
-        type: 'sarah',
-        text: "Yes. That's Priya. She's conscientious. She just gets on with things.",
-      },
-      {
-        type: 'kenji',
-        text: 'Has she ever been asked to document what she found?',
-      },
-      {
-        type: 'sarah',
-        text: 'Not formally. I usually catch it in the handover report.',
+        text: 'Kenji nods slowly. He does not respond. He continues walking.',
       },
       {
         type: 'narrator',
-        text: 'Kenji makes a small note. They walk on.',
+        text: 'Three minutes later, they pass a quality problem on Line 3. A team member is crouching over a rejected part, examining it alone. Two colleagues are standing nearby, watching. No one is speaking. There seems to be no formalised process in solving this quality issue. At least for Kenji, he sees no methodology such as the PAI boards or the D4 (QRQC) method or 5 why.',
+      },
+      {
+        type: 'narrator',
+        text: 'He watches a little longer, and realises, there is no process for solving problems. Then he moves on.',
+      },
+      {
+        type: 'sarah',
+        text: 'That is Marek. He is one of our best. He will sort it. He likes to sort out these types of problems. That leaves the other team members to get on with other things.',
+      },
+      {
+        type: 'narrator',
+        text: 'Kenji stops again. He watches for a moment. Then he moves on.',
+      },
+      {
+        type: 'narrator',
+        text: 'Near the end of the floor, two operators are standing idle beside a machine that has been paused. One of them spots Sarah and raises a hand — a question forming in the gesture. Sarah moves toward them immediately.',
+      },
+      {
+        type: 'sarah',
+        text: 'What is it?',
+      },
+      {
+        type: 'narrator',
+        text: 'The operator explains a small tooling issue. Sarah listens for 30 seconds, gives a clear answer, to which the operators, perform the task she has set them, and the machine restarts. She rejoins Kenji.',
+      },
+      {
+        type: 'sarah',
+        text: 'Sorry about that. These things come up.',
+      },
+      {
+        type: 'kenji',
+        text: 'Of course they do.',
+      },
+      {
+        type: 'narrator',
+        text: 'His tone is entirely neutral. It is impossible to tell if he approves or disapproves. He simply observes, as he has been doing since they stepped onto the floor.',
       },
 
       // ── Act 3: The Office ──────────────────────────────────────────────────
       { type: 'act', label: 'Act 3 — The Office' },
       {
         type: 'narrator',
-        text: "Back in Sarah's office. Two chairs. A small table. Through the glass wall, the floor is visible. Kenji sets his notebook down but does not open it. He looks out at the floor for a moment before he speaks.",
-      },
-      {
-        type: 'kenji',
-        text: "Your floor is clean. The team is clearly skilled. I can see that Sarah's team runs well — when Sarah is here.",
-      },
-      {
-        type: 'sarah',
-        text: "Thank you. We've worked hard on our systems.",
-      },
-      {
-        type: 'kenji',
-        text: 'I believe you. That is also what concerns me.',
-      },
-      {
-        type: 'sarah',
-        text: 'What do you mean?',
-      },
-      {
-        type: 'kenji',
-        text: "The systems work because you are in the middle of them. The board needs you. The deviation sign-off needs you. Priya solved a quality issue this morning — alone, quietly — because she has learned it is easier than bringing it to a system that requires your presence to move.",
+        text: 'They return to Sarah\'s office. She offers coffee. Kenji accepts. She sits across from him at her desk. There are papers, two screens, a whiteboard covered in initials and numbers, and a photo of her team from last year\'s quality certification.',
       },
       {
         type: 'narrator',
-        text: 'Sarah is quiet. She looks through the glass at the floor.',
-      },
-      {
-        type: 'sarah',
-        text: 'I built it that way because it worked.',
+        text: 'She waits for his assessment. He is quiet for a moment. He looks at his notebook, which he has not opened. He looks up.',
       },
       {
         type: 'kenji',
-        text: 'It worked for output. It also built something else — a team that has learned to wait. A team that has learned not to solve problems without you.',
+        text: 'Thank you for the Genba walk.',
+      },
+      {
+        type: 'sarah',
+        text: 'Of course. I hope it was useful. I can pull together a full data pack for you — output figures, quality trends, absenteeism, overtime. It would give you a clearer picture.',
+      },
+      {
+        type: 'kenji',
+        text: 'Perhaps later. I have a question first.',
+      },
+      {
+        type: 'sarah',
+        text: 'Go ahead.',
+      },
+      {
+        type: 'kenji',
+        text: 'When you are not here, Sarah — what happens?',
+      },
+      {
+        type: 'narrator',
+        text: 'Sarah answers without hesitation.',
+      },
+      {
+        type: 'sarah',
+        text: 'The team manages. They know the processes. I have trained them all myself. There are always small issues but nothing that cannot wait until I am back.',
+      },
+      {
+        type: 'kenji',
+        text: 'I see.',
+      },
+      {
+        type: 'narrator',
+        text: 'A pause.',
+      },
+      {
+        type: 'kenji',
+        text: 'I did not ask what your team does when you are not here. I asked what happens.',
+      },
+      {
+        type: 'narrator',
+        text: 'Sarah starts to respond, then stops. She begins again, differently. Then stops again.',
+      },
+      {
+        type: 'narrator',
+        text: 'The silence that follows is the longest she has experienced in a work meeting in several years. She finds that she does not have an answer she believes in.',
       },
 
       // ── Act 4: The Question ────────────────────────────────────────────────
       { type: 'act', label: 'Act 4 — The Question' },
       {
         type: 'kenji',
-        text: 'When you are not here, Sarah — what actually happens?',
-      },
-      {
-        type: 'sarah',
-        text: "The team manages. They know the processes. I've trained them well. There are always a few issues but nothing that can't wait until I'm back.",
+        text: 'I noticed three things on the floor this morning. The first: two operators stopped working and waited for you to answer a question they almost certainly could have resolved between themselves. They waited because they have learned that is what they should do.',
       },
       {
         type: 'kenji',
-        text: 'I did not ask what your team does. I asked what happens.',
+        text: 'The second: one of your strongest people was solving a quality problem alone, in a corner, not asking anyone for input or support. He has learned to contain problems, not to surface them.',
+      },
+      {
+        type: 'kenji',
+        text: 'The third: your visual board is maintained by you. It speaks your language, not the language of the people who work beside it every day.',
       },
       {
         type: 'narrator',
-        text: 'The silence that followed was the longest Sarah had experienced in a work meeting. She found herself searching for an answer she believed. She could not find one.',
-      },
-      {
-        type: 'kenji',
-        text: 'The floor told me something today. Your team is capable. They are also waiting. Those two things should not be true at the same time. That is where we begin.',
+        text: 'Sarah is quiet. Her instinct is to defend. She is very good at defending. But something in the precision of what he has just said stops her.',
       },
       {
         type: 'sarah',
-        text: "Are you saying I'm the problem?",
-      },
-      {
-        type: 'kenji',
-        text: 'I am saying you may also be the solution. But only if you are willing to look honestly at what you have built — and what you may need to unlearn.',
+        text: 'Are you saying I am the problem.',
       },
       {
         type: 'narrator',
-        text: "Sarah looked at the floor through the glass. For the first time in years, she wasn't sure what she was looking at.",
+        text: 'It is not quite a question.',
       },
       {
         type: 'kenji',
-        text: "Before we look at your roadmap — I want you to sit with one question. Just one. Take it with you today. Write it down if that helps.",
+        text: 'I am saying you may also be the solution. But only if you are willing to look honestly at what you have built here.',
+      },
+      {
+        type: 'narrator',
+        text: 'He lets that sit for a moment.',
       },
       {
         type: 'kenji',
-        text: "\"If I disappeared from this floor for a week — what would that reveal about the system I have built?\"",
+        text: 'The floor told me something today. It told me that your team is capable. It also told me they have learned not to try without you. Those two things are connected. That is where we begin.',
+      },
+      {
+        type: 'sarah',
+        text: 'What do you want me to do?',
+      },
+      {
+        type: 'kenji',
+        text: 'For now? Nothing. I want you to think about one question. Not answer it today — just hold it.',
+      },
+      {
+        type: 'sarah',
+        text: 'What is the question?',
+      },
+      {
+        type: 'kenji',
+        text: 'Why does your team need you to be present for things to work?',
+      },
+      {
+        type: 'narrator',
+        text: 'He picks up his notebook. He stands.',
+      },
+      {
+        type: 'kenji',
+        text: 'I will come back on Thursday. Same time. We can walk again.',
+      },
+      {
+        type: 'sarah',
+        text: 'That\'s it? No report? No recommendations?',
+      },
+      {
+        type: 'kenji',
+        text: 'Not yet. I have only been here for one morning. I do not know enough to recommend anything.',
+      },
+      {
+        type: 'narrator',
+        text: 'He says this without irony. He means it completely.',
+      },
+      {
+        type: 'kenji',
+        text: 'Enjoy the rest of your day, Sarah.',
+      },
+      {
+        type: 'narrator',
+        text: 'He leaves. Sarah remains at her desk. The coffee has gone cold. On the floor outside her office, she can hear the familiar sound of someone waiting with a question.',
+      },
+      {
+        type: 'narrator',
+        text: 'She does not go out immediately. For the first time in a long time, she sits with a thought that is not yet finished.',
+      },
+      {
+        type: 'narrator',
+        text: 'END OF CHAPTER 1',
       },
     ],
     reflectionQuestions: [
-      'When you are not present — what actually happens in your team or area of responsibility?',
-      'In what ways might your team have learned to depend on you rather than grow themselves?',
-      'What is one leadership habit you have that might be preventing others from stepping up?',
+      'When you are not present — what actually happens in your team or area of responsibility? Not what you think happens. What actually happens.',
+      'In what ways might your team have learned to depend on you rather than develop themselves? What did you do — even with good intentions — that taught them this?',
+      'What is one habit of yours that may be preventing the people around you from growing?',
     ],
     stopAndThinkPrompts: {
       'Part 1 — Your Ikigai': [
@@ -235,7 +327,7 @@ export const caseStudies = {
       ],
     },
     journalPrompt:
-      'Describe a specific Genba Moment — a real situation on your floor or in your team where you noticed something. What was happening around you? What were you doing? Who else was involved? What made this moment meaningful — not what should have, but what actually did? Which of the four Ikigai circles does this moment connect to for you?',
+      'Describe a recent situation where you solved a problem your team could have solved itself. What stopped you from stepping back? What did it cost them — in capability, in confidence, in trust? Remember, it is fine to be present with your team during problem solving but ensure two things: there is a clearly defined process to solving the problem (PAI, 5W, D4, A3..), and don\'t give all the answers. Make a list of "open questions" you could ask the team. Example: "If I were not here, how would you all go about solving this problem?" "what would happen if you tried a structured, team based approach to solving the issue?"…… The key point is, take a look at yourself, as in a mirror and ask, what could you have done differently or better so that your team become more self-reliant in problem solving in the future, and if I could go back in time, what would I have done differently to avoid this situation today that we have!',
   },
 
   'leading-self': {
