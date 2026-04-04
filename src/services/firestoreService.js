@@ -167,7 +167,7 @@ export const getJournalEntries = async (uid, limitCount = 50) => {
     ...entry,
     type: 'habit',
     displayName: `Habit: ${entry.habitName || 'Check-in'}`,
-    _sortKey: entry.date || entry.timestamp?.toDate?.()?.toISOString() || '',
+    _sortKey: entry.date || (entry.timestamp && entry.timestamp.toDate ? entry.timestamp.toDate().toISOString() : ''),
   })));
 
   // Get bus checkins
@@ -176,13 +176,13 @@ export const getJournalEntries = async (uid, limitCount = 50) => {
     ...entry,
     type: 'bus',
     displayName: `Bus Check-in: ${entry.busColour || 'Check-in'}`,
-    _sortKey: entry.date || entry.timestamp?.toDate?.()?.toISOString() || '',
+    _sortKey: entry.date || (entry.timestamp && entry.timestamp.toDate ? entry.timestamp.toDate().toISOString() : ''),
   })));
 
   // Get ikigai map (if exists)
   const ikigaiMap = await getIkigaiMap(uid);
   if (ikigaiMap) {
-    const dateStr = ikigaiMap.updatedAt?.toDate?.()?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0];
+    const dateStr = (ikigaiMap.updatedAt && ikigaiMap.updatedAt.toDate) ? ikigaiMap.updatedAt.toDate().toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
     entries.push({
       ...ikigaiMap,
       type: 'ikigai',
@@ -198,7 +198,7 @@ export const getJournalEntries = async (uid, limitCount = 50) => {
     ...entry,
     type: 'intention',
     displayName: `Weekly Intention: ${entry.weekKey}`,
-    _sortKey: entry.createdAt?.toDate?.()?.toISOString() || entry.weekKey || '',
+    _sortKey: (entry.createdAt && entry.createdAt.toDate) ? entry.createdAt.toDate().toISOString() : entry.weekKey || '',
   })));
 
   // Get journalEntries subcollection (case study reflections, genba moments,
@@ -211,7 +211,7 @@ export const getJournalEntries = async (uid, limitCount = 50) => {
     entries.push({
       id: d.id,
       ...data,
-      _sortKey: data.createdAt?.toDate?.()?.toISOString() || '',
+      _sortKey: (data.createdAt && data.createdAt.toDate) ? data.createdAt.toDate().toISOString() : '',
     });
   });
 
