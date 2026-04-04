@@ -76,6 +76,9 @@ export default function CaseStudyPage() {
   const [showChecklist, setShowChecklist] = useState(false);
   const [progress, setProgress] = useState(null);
   const [loadingProgress, setLoadingProgress] = useState(true);
+  const [isReviewMode, setIsReviewMode] = useState(false);
+  const [showReflectionSummary, setShowReflectionSummary] = useState(false);
+  const [reviewMode, setReviewMode] = useState('story'); // 'story' | 'reflection' | 'insights'
 
   const study = caseStudies[moduleId];
 
@@ -86,6 +89,11 @@ export default function CaseStudyPage() {
       try {
         const p = await getCourseProgress(currentUser.uid);
         setProgress(p);
+        
+        // Check if this is a completed module
+        const isCompleted = p?.[moduleId]?.completed === true;
+        setIsReviewMode(isCompleted);
+        
         if (study && !study.comingSoon && !p?.[moduleId]?.started) {
           await markModuleStarted(currentUser.uid, moduleId);
         }
@@ -147,6 +155,15 @@ export default function CaseStudyPage() {
   const scenes = study.scenes;
   const totalScenes = scenes.length;
   const isOnLastScene = visibleCount >= totalScenes;
+  const isCompleted = progress?.[moduleId]?.completed === true;
+  const completionDate = progress?.[moduleId]?.completedAt;
+
+  // In review mode, show all scenes at once
+  useEffect(() => {
+    if (isReviewMode && scenes.length > 0) {
+      setVisibleCount(scenes.length);
+    }
+  }, [isReviewMode, scenes.length]);
 
   const handleContinue = () => {
     if (isOnLastScene) setShowReflection(true);
@@ -295,6 +312,70 @@ export default function CaseStudyPage() {
     );
   }
 
+  // ── Reflection Summary Modal ─────────────────────────────────────────────────────
+  if (showReflectionSummary) {
+    return (
+      <div className="fixed inset-0 z-50 bg-gi-deep flex flex-col">
+        <div className="px-6 py-6 border-b border-gi-slate">
+          <button
+            onClick={() => setShowReflectionSummary(false)}
+            className="text-gi-horizon text-sm mb-4 flex items-center gap-2 hover:text-gi-white transition-colors"
+          >
+            ← Back to review
+          </button>
+          <h2 className="text-2xl font-light text-gi-white tracking-wide">
+            Your Reflection
+          </h2>
+          <p className="text-gi-horizon text-sm mt-1">
+            {study.moduleLabel} • {completionDate ? `Completed ${new Date(completionDate.toDate ? completionDate.toDate() : completionDate).toLocaleDateString()}` : 'Completed'}
+          </p>
+        </div>
+
+        <div className="flex-1 px-6 py-6 overflow-y-auto">
+          <div className="max-w-2xl mx-auto">
+            <div
+              className="rounded-gi p-5 mb-6"
+              style={{ background: 'rgba(255,213,89,0.06)', border: '1px solid rgba(255,213,89,0.15)' }}
+            >
+              <p className="text-gi-gold text-xs uppercase tracking-widest mb-3">Journal Prompt</p>
+              <p className="text-gi-horizon text-sm leading-relaxed italic">{study.journalPrompt}</p>
+            </div>
+
+            <div className="mb-6">
+              <p className="text-gi-white text-sm font-medium mb-3">Your Responses</p>
+              <div className="space-y-4">
+                {study.reflectionQuestions.map((question, i) => (
+                  <div key={i} className="gi-card p-4">
+                    <p className="text-gi-white text-sm font-medium mb-2">{question}</p>
+                    <div className="text-gi-mist text-xs italic">
+                      <p>Your answer would appear here...</p>
+                      <p className="mt-2 text-gi-slate">(Note: Reflection storage integration needed)</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => navigate(`/journal?newEntry=true&type=case-study-reflection&module=${moduleId}`)}
+                className="w-full bg-gi-gold text-gi-deep font-semibold py-4 rounded-gi hover:opacity-90 transition-opacity"
+              >
+                Update Your Reflection →
+              </button>
+              <button
+                onClick={() => navigate('/journal')}
+                className="w-full text-gi-horizon text-sm py-2 hover:text-gi-white transition-colors"
+              >
+                View in Journal →
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // ── Reading view — floating chat panel on wide screens ─────────────────────
   return (
     /*
@@ -309,6 +390,56 @@ export default function CaseStudyPage() {
       <div className="w-full flex-shrink-0">
         <ProgressBar current={visibleCount} total={totalScenes} />
       </div>
+
+      {/* Review Mode Header */}
+      {isReviewMode && (
+        <div
+          className="w-full flex-shrink-0 px-4 py-3"
+          style={{ background: 'linear-gradient(90deg, rgba(74,179,160,0.1) 0%, rgba(74,179,160,0.05) 100%)', borderBottom: '1px solid rgba(74,179,160,0.2)' }}
+        >
+          <div className="max-w-2xl mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'rgba(74,179,160,0.2)', color: '#4AB3A0' }}>
+                <span className="text-sm font-bold">✓</span>
+              </div>
+              <div>
+                <p className="text-gi-white text-sm font-medium">COMPLETED</p>
+                <p className="text-gi-mist text-xs">
+                  {completionDate ? `Completed ${new Date(completionDate.toDate ? completionDate.toDate() : completionDate).toLocaleDateString()}` : 'Completed'}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setReviewMode('story')}
+                className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
+                  reviewMode === 'story' 
+                    ? 'bg-gi-gold text-gi-deep' 
+                    : 'bg-gi-slate text-gi-horizon hover:text-gi-white'
+                }`}
+              >
+                Story
+              </button>
+              <button
+                onClick={() => setShowReflectionSummary(true)}
+                className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
+                  reviewMode === 'reflection' 
+                    ? 'bg-gi-gold text-gi-deep' 
+                    : 'bg-gi-slate text-gi-horizon hover:text-gi-white'
+                }`}
+              >
+                Reflection
+              </button>
+              <button
+                onClick={() => navigate('/journal')}
+                className="px-3 py-1 rounded-full text-xs font-medium bg-gi-slate text-gi-horizon hover:text-gi-white transition-all"
+              >
+                View Journal →
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Centered chat window */}
       <div
@@ -341,21 +472,30 @@ export default function CaseStudyPage() {
             </div>
           </div>
           <div className="text-right">
-            <p className="text-gi-mist text-xs">Scene {visibleCount} of {totalScenes}</p>
+            <p className="text-gi-mist text-xs">
+              {isReviewMode ? 'Review Mode' : `Scene ${visibleCount} of ${totalScenes}`}
+            </p>
             {/* Mini progress dots */}
             <div className="flex gap-1 mt-1 justify-end">
-              {Array.from({ length: Math.min(totalScenes, 13) }).map((_, i) => (
-                <div
-                  key={i}
-                  className="rounded-full transition-all duration-300"
-                  style={{
-                    width: i < visibleCount ? 6 : 4,
-                    height: 4,
-                    background: i < visibleCount ? '#FFD559' : '#4A6478',
-                    opacity: i < visibleCount ? 1 : 0.4,
-                  }}
-                />
-              ))}
+              {isReviewMode ? (
+                <div className="flex items-center gap-1">
+                  <div className="w-2 h-2 rounded-full" style={{ background: '#4AB3A0' }} />
+                  <span className="text-xs text-gi-mist">All scenes visible</span>
+                </div>
+              ) : (
+                Array.from({ length: Math.min(totalScenes, 13) }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="rounded-full transition-all duration-300"
+                    style={{
+                      width: i < visibleCount ? 6 : 4,
+                      height: 4,
+                      background: i < visibleCount ? '#FFD559' : '#4A6478',
+                      opacity: i < visibleCount ? 1 : 0.4,
+                    }}
+                  />
+                ))
+              )}
             </div>
           </div>
         </div>
@@ -431,20 +571,46 @@ export default function CaseStudyPage() {
             bottom: 0,
           }}
         >
-          <button
-            onClick={handleContinue}
-            className="w-full bg-gi-gold text-gi-deep font-semibold py-4 rounded-gi hover:opacity-90 transition-opacity flex items-center justify-center gap-2 text-base"
-          >
-            {isOnLastScene ? (
-              <>Reflect <span className="text-lg">→</span></>
-            ) : (
-              <>Continue <span className="text-sm opacity-70">→</span></>
-            )}
-          </button>
-          {isOnLastScene && (
-            <p className="text-gi-mist text-xs text-center mt-2">
-              You've reached the end of this chapter.
-            </p>
+          {isReviewMode ? (
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => setShowReflectionSummary(true)}
+                className="w-full bg-gi-gold text-gi-deep font-semibold py-4 rounded-gi hover:opacity-90 transition-opacity flex items-center justify-center gap-2 text-base"
+              >
+                <span>View Your Reflection</span>
+                <span className="text-lg">→</span>
+              </button>
+              <button
+                onClick={() => navigate('/journal')}
+                className="w-full text-gi-horizon text-sm py-2 hover:text-gi-white transition-colors"
+              >
+                View All Journal Entries →
+              </button>
+              <button
+                onClick={() => navigate('/home')}
+                className="w-full text-gi-mist text-xs py-2 hover:text-gi-horizon transition-colors"
+              >
+                ← Back to Home
+              </button>
+            </div>
+          ) : (
+            <>
+              <button
+                onClick={handleContinue}
+                className="w-full bg-gi-gold text-gi-deep font-semibold py-4 rounded-gi hover:opacity-90 transition-opacity flex items-center justify-center gap-2 text-base"
+              >
+                {isOnLastScene ? (
+                  <>Reflect <span className="text-lg">→</span></>
+                ) : (
+                  <>Continue <span className="text-sm opacity-70">→</span></>
+                )}
+              </button>
+              {isOnLastScene && (
+                <p className="text-gi-mist text-xs text-center mt-2">
+                  You've reached the end of this chapter.
+                </p>
+              )}
+            </>
           )}
         </div>
       </div>
