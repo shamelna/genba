@@ -27,12 +27,10 @@ export default function Navigation() {
         }]
       : []),
     { path: '/dashboard', label: 'Dashboard', icon: '📊' },
-    {
-      path: '/compass',
-      label: 'Compass',
-      icon: '🧭',
-      disabled: !canAccessCompass
-    },
+    // Compass — only show to users who have access
+    ...(canAccessCompass
+      ? [{ path: '/compass', label: 'Compass', icon: '🧭' }]
+      : []),
     { path: '/journal', label: 'Journal', icon: '📔' },
     { path: '/settings', label: 'Settings', icon: '⚙️' },
   ];
@@ -41,12 +39,7 @@ export default function Navigation() {
     navItems.push({ path: '/admin', label: 'Admin', icon: '👤' });
   }
 
-  const handleNavClick = (path, disabled) => {
-    if (disabled) {
-      // Show upgrade prompt for Compass
-      alert('My Ikigai Compass is available to Premium members. Contact your course provider to unlock this feature.');
-      return;
-    }
+  const handleNavClick = (path) => {
     navigate(path);
   };
 
@@ -65,19 +58,15 @@ export default function Navigation() {
             const isActive = item.activeOverride !== undefined
               ? item.activeOverride
               : location.pathname === item.path;
-            const isDisabled = item.disabled;
 
             return (
               <button
                 key={item.path}
-                onClick={() => handleNavClick(item.path, isDisabled)}
-                disabled={isDisabled}
+                onClick={() => handleNavClick(item.path)}
                 className={`flex flex-col items-center py-2 px-3 rounded-lg transition-all ${
                   isActive
                     ? 'text-gi-white'
-                    : isDisabled
-                      ? 'text-gi-mist/50 cursor-not-allowed'
-                      : 'text-gi-mist hover:text-gi-white'
+                    : 'text-gi-mist hover:text-gi-white'
                 }`}
               >
                 <span className="text-2xl mb-1">{item.icon}</span>
