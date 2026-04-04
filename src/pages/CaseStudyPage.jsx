@@ -7,6 +7,7 @@ import {
   markModuleStarted,
   saveCaseStudyReflection,
   getCaseStudyReflection,
+  markModuleCompleted,
 } from '../services/firestoreService';
 import CaseStudyScene from '../components/CaseStudyScene';
 import ReflectionPanel from '../components/ReflectionPanel';
@@ -115,6 +116,21 @@ export default function CaseStudyPage() {
     load();
   }, [currentUser, moduleId]);
 
+  // Update review mode when progress changes (to handle real-time updates)
+  useEffect(() => {
+    const isCompleted = progress?.[moduleId]?.completed === true;
+    setIsReviewMode(isCompleted);
+    
+    if (isCompleted && !savedReflection) {
+      // Load saved reflection if we don't have it yet
+      getCaseStudyReflection(currentUser.uid, moduleId).then(reflection => {
+        if (reflection) {
+          setSavedReflection(reflection);
+        }
+      });
+    }
+  }, [progress, moduleId]);
+
   // Declare scenes early to avoid initialization error
   const scenes = study?.scenes || [];
   const totalScenes = scenes.length;
@@ -194,6 +210,22 @@ export default function CaseStudyPage() {
   const handleReflectionSave = async (answers) => {
     try {
       await saveCaseStudyReflection(currentUser.uid, moduleId, answers);
+      // Mark module as completed after saving reflection
+      await markModuleCompleted(currentUser.uid, moduleId);
+      
+      // Update local progress state
+      setProgress(prev => ({
+        ...prev,
+        [moduleId]: {
+          ...prev?.[moduleId],
+          completed: true,
+          completedAt: new Date().toISOString()
+        }
+      }));
+      
+      // Update review mode state
+      setIsReviewMode(true);
+      setSavedReflection({ reflectionAnswers: answers });
     } catch (err) {
       console.error('Error saving reflection:', err);
     }
