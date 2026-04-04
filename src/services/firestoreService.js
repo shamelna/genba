@@ -72,12 +72,12 @@ export const saveBusCheckin = async (uid, busData) => {
   });
 };
 
-export const getBusCheckins = async (uid, limit = 10) => {
+export const getBusCheckins = async (uid, limitCount = 10) => {
   const busRef = collection(db, 'users', uid, 'bus');
   const q = query(
     busRef,
     orderBy('date', 'desc'),
-    limit(limit)
+    limit(limitCount)
   );
   
   const snapshot = await getDocs(q);

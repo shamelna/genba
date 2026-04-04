@@ -125,6 +125,13 @@ export default function CaseStudyPage() {
     }
   }, [visibleCount]);
 
+  // In review mode, show all scenes at once
+  useEffect(() => {
+    if (isReviewMode && scenes && scenes.length > 0) {
+      setVisibleCount(scenes.length);
+    }
+  }, [isReviewMode, scenes]);
+
   if (loadingProgress) {
     return (
       <div className="min-h-screen bg-gi-deep flex items-center justify-center">
@@ -157,13 +164,6 @@ export default function CaseStudyPage() {
   const isOnLastScene = visibleCount >= totalScenes;
   const isCompleted = progress?.[moduleId]?.completed === true;
   const completionDate = progress?.[moduleId]?.completedAt;
-
-  // In review mode, show all scenes at once
-  useEffect(() => {
-    if (isReviewMode && scenes.length > 0) {
-      setVisibleCount(scenes.length);
-    }
-  }, [isReviewMode, scenes.length]);
 
   const handleContinue = () => {
     if (isOnLastScene) setShowReflection(true);
