@@ -8,6 +8,7 @@ import {
   saveCaseStudyReflection,
   getCaseStudyReflection,
   markModuleCompleted,
+  saveJournalEntryWithReflection,
 } from '../services/firestoreService';
 import CaseStudyScene from '../components/CaseStudyScene';
 import ReflectionPanel from '../components/ReflectionPanel';
@@ -209,7 +210,19 @@ export default function CaseStudyPage() {
 
   const handleReflectionSave = async (answers) => {
     try {
+      // Save reflection to reflections collection
       await saveCaseStudyReflection(currentUser.uid, moduleId, answers);
+      
+      // Also save as journal entry for journal visibility
+      await saveJournalEntryWithReflection(currentUser.uid, moduleId, {
+        title: `${MODULE_LABELS[moduleId]} Reflection`,
+        content: answers.map((answer, i) => 
+          `Q${i + 1}: ${study.reflectionQuestions[i]}\n\nA${i + 1}: ${answer.answer}`
+        ).join('\n\n'),
+        reflectionAnswers: answers,
+        moduleLabel: MODULE_LABELS[moduleId],
+      });
+      
       // Mark module as completed after saving reflection
       await markModuleCompleted(currentUser.uid, moduleId);
       
