@@ -5,6 +5,7 @@ import { useUserTier } from '../contexts/UserTierContext';
 import Navigation from '../components/Navigation';
 import CourseJourneyCard from '../components/CourseJourneyCard';
 import HabitsHouseInline from '../components/HabitsHouseInline';
+import DailyPracticeCard from '../components/DailyPracticeCard';
 import { habitsData, dailyReflectionPrompts } from '../data/habitsData';
 import { calculateStreak, getHabitCheckinByDate, getCourseProgress } from '../services/firestoreService';
 import { MODULE_ORDER } from '../data/caseStudies';
@@ -97,6 +98,9 @@ export default function Home() {
         >
           <HabitsHouseInline currentModuleId={currentModuleId} />
         </div>
+
+        {/* ── DAILY MICRO-PRACTICE CARD ── */}
+        <DailyPracticeCard />
 
         {/* ── DAILY PRACTICE DRAWER ── */}
         <div className="mb-4">

@@ -3,19 +3,204 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useUserTier } from '../contexts/UserTierContext';
 import Navigation from '../components/Navigation';
-import { 
-  getJournalEntries, 
-  calculateHabitAverages, 
+import {
+  getJournalEntries,
+  calculateHabitAverages,
   getHabitCheckins,
   getCourseProgress,
-  getCaseStudyReflection
+  getCaseStudyReflection,
+  getDailyPracticeLog,
+  getPracticeSummary,
+  getHabitInsights,
 } from '../services/firestoreService';
 import { habitsData } from '../data/habitsData';
-import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
+import { habitColors, habitIcons } from '../data/dailyPractices';
+import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Cell, Tooltip, ResponsiveContainer as RC2 } from 'recharts';
 
 // ── Tab Components ────────────────────────────────────────────────────────────────
 
-function ProgressTab({ habitAverages, timeRange, setTimeRange }) {
+// ── Practice Tab ──────────────────────────────────────────────────────────────
+
+function PracticeTab({ practiceLog, practiceSummary }) {
+  const navigate = useNavigate();
+
+  const formatDate = (val) => {
+    if (!val) return '';
+    let d = typeof val === 'string' ? new Date(val) : (val.toDate ? val.toDate() : new Date(val));
+    const today = new Date();
+    const diff = Math.floor((today - d) / 86400000);
+    if (diff === 0) return 'Today';
+    if (diff === 1) return 'Yesterday';
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+
+  // Count by habitId for frequency chart
+  const habitCounts = {};
+  practiceLog.forEach(p => {
+    if (p.habitId && p.habitId !== 'integration') {
+      habitCounts[p.habitId] = (habitCounts[p.habitId] || 0) + 1;
+    }
+  });
+  const chartData = Object.entries(habitCounts).map(([id, count]) => ({
+    name: id.charAt(0).toUpperCase() + id.slice(1),
+    count,
+    habitId: id,
+  }));
+
+  const total = practiceSummary?.totalCompleted || 0;
+  const lastDate = practiceSummary?.lastCompletedDate;
+
+  return (
+    <div className="space-y-6">
+      {/* Summary stats */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="gi-card p-4 text-center">
+          <p className="text-gi-horizon text-xs uppercase tracking-widest mb-1">Completed</p>
+          <p className="text-3xl font-light text-gi-gold">{total}</p>
+          <p className="text-gi-mist text-xs mt-0.5">practices</p>
+        </div>
+        <div className="gi-card p-4 text-center">
+          <p className="text-gi-horizon text-xs uppercase tracking-widest mb-1">Last Practice</p>
+          <p className="text-gi-white text-sm font-medium mt-1">{lastDate ? formatDate(lastDate) : '—'}</p>
+        </div>
+      </div>
+
+      {/* Frequency chart */}
+      {chartData.length > 0 && (
+        <div className="gi-card p-5">
+          <h3 className="text-base font-light text-gi-white mb-4">Practice Frequency</h3>
+          <div className="space-y-3">
+            {chartData.map(d => (
+              <div key={d.habitId} className="flex items-center gap-3">
+                <span className="text-base w-6 text-center">{habitIcons[d.habitId] || '✦'}</span>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-1">
+                    <p className="text-gi-white text-xs font-medium">{d.name}</p>
+                    <p className="text-gi-gold text-xs">{d.count}</p>
+                  </div>
+                  <div className="h-1.5 rounded-full" style={{ background: 'rgba(74,100,120,0.3)' }}>
+                    <div
+                      className="h-full rounded-full transition-all duration-500"
+                      style={{
+                        width: `${Math.min((d.count / Math.max(...chartData.map(x => x.count))) * 100, 100)}%`,
+                        background: habitColors[d.habitId] || '#FFD559',
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Recent practices */}
+      <div className="gi-card p-5">
+        <h3 className="text-base font-light text-gi-white mb-4">Recent Practices</h3>
+        {practiceLog.length === 0 ? (
+          <div className="text-center py-6">
+            <p className="text-4xl mb-3">🪞</p>
+            <p className="text-gi-mist text-sm">No practices logged yet. Check the Home page to start!</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {practiceLog.slice(0, 10).map((p, i) => (
+              <div
+                key={i}
+                className="flex items-start gap-3 p-3 rounded-gi"
+                style={{
+                  background: 'rgba(37,53,69,0.6)',
+                  borderLeft: `3px solid ${habitColors[p.habitId] || '#4A6478'}`,
+                }}
+              >
+                <span className="text-base mt-0.5">{habitIcons[p.habitId] || '✦'}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2 mb-0.5">
+                    <p className="text-gi-white text-xs font-medium truncate">{p.habitName}</p>
+                    <p className="text-gi-mist text-xs flex-shrink-0">{formatDate(p.date || p.completedAt)}</p>
+                  </div>
+                  <p className="text-gi-horizon text-xs italic truncate">"{p.prompt}"</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Habit Insights Section (used inside ProgressTab) ─────────────────────────
+
+function HabitInsightsSection({ habitInsights, onViewAll }) {
+  const truncate = (text, max = 90) =>
+    text && text.length > max ? text.slice(0, max) + '…' : text;
+
+  const formatDate = (val) => {
+    if (!val) return '';
+    const d = val.toDate ? val.toDate() : new Date(val);
+    const diff = Math.floor((Date.now() - d) / 86400000);
+    if (diff === 0) return 'Today';
+    if (diff === 1) return 'Yesterday';
+    if (diff < 7) return `${diff} days ago`;
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+
+  const habitLabel = {
+    hansei: 'Hansei (Self-Reflection)',
+    humility: 'Humility (Stepping Back)',
+    integrity: 'Integrity (Keeping Commitments)',
+    respect: 'Respect (Seeing People)',
+  };
+
+  if (habitInsights.length === 0) return null;
+
+  return (
+    <div className="gi-card p-5">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-base font-light text-gi-white">Recent Habit Insights</h3>
+        {habitInsights.length > 3 && (
+          <button
+            onClick={onViewAll}
+            className="text-xs text-gi-gold hover:opacity-80 transition-opacity"
+          >
+            View All →
+          </button>
+        )}
+      </div>
+      <div className="space-y-3">
+        {habitInsights.slice(0, 4).map((insight, i) => {
+          const firstAnswer = insight.promptAnswers?.find(a => a.answer)?.answer;
+          const color = habitColors[insight.habitId] || '#4AB3A0';
+          return (
+            <div
+              key={i}
+              className="p-3 rounded-gi"
+              style={{
+                background: 'rgba(37,53,69,0.6)',
+                borderLeft: `3px solid ${color}`,
+              }}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-xs font-medium" style={{ color }}>
+                  {habitLabel[insight.habitId] || insight.habitName}
+                </p>
+                <p className="text-gi-mist text-xs">{formatDate(insight.createdAt)}</p>
+              </div>
+              {firstAnswer && (
+                <p className="text-gi-horizon text-xs italic leading-relaxed">
+                  "{truncate(firstAnswer)}"
+                </p>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function ProgressTab({ habitAverages, timeRange, setTimeRange, habitInsights, onViewAllInsights }) {
   const getScoreColor = (average) => {
     if (average >= 4) return 'text-green-400';
     if (average >= 3) return 'text-yellow-400';
@@ -118,6 +303,9 @@ function ProgressTab({ habitAverages, timeRange, setTimeRange }) {
             ))}
         </div>
       </div>
+
+      {/* Recent Habit Insights */}
+      <HabitInsightsSection habitInsights={habitInsights || []} onViewAll={onViewAllInsights} />
     </div>
   );
 }
@@ -131,6 +319,8 @@ function JournalTab({ entries, activeFilter, setActiveFilter, canAccessCompass }
   const ALL_FILTERS = [
     { key: 'all', label: 'All' },
     { key: 'genba-moment', label: 'Moments' },
+    { key: 'habit-insight', label: 'Habit Insights' },
+    { key: 'daily-practice', label: 'Practices' },
     { key: 'stop-and-think', label: 'Reflections' },
     { key: 'case-study-reflection', label: 'Case Study' },
     { key: 'habit', label: 'Habits' },
@@ -149,6 +339,8 @@ function JournalTab({ entries, activeFilter, setActiveFilter, canAccessCompass }
       case 'genba-moment': return '⬤';
       case 'stop-and-think': return '◈';
       case 'baseline': return '◎';
+      case 'habit-insight': return '💡';
+      case 'daily-practice': return '🪞';
       default: return '📔';
     }
   };
@@ -159,6 +351,8 @@ function JournalTab({ entries, activeFilter, setActiveFilter, canAccessCompass }
       case 'stop-and-think': return '#4AB3A0';
       case 'baseline': return '#A78BFA';
       case 'case-study-reflection': return '#60A5FA';
+      case 'habit-insight': return '#4AB3A0';
+      case 'daily-practice': return '#8BA0B2';
       default: return null;
     }
   };
@@ -397,21 +591,30 @@ export default function LearningDashboard() {
   const [progress, setProgress] = useState({});
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState('all');
+  const [practiceLog, setPracticeLog] = useState([]);
+  const [practiceSummary, setPracticeSummary] = useState({});
+  const [habitInsights, setHabitInsights] = useState([]);
 
   useEffect(() => {
     const loadData = async () => {
       if (!currentUser) return;
-      
+
       try {
-        const [averages, allEntries, courseProgress] = await Promise.all([
+        const [averages, allEntries, courseProgress, log, summary, insights] = await Promise.all([
           calculateHabitAverages(currentUser.uid, timeRange),
           getJournalEntries(currentUser.uid),
-          getCourseProgress(currentUser.uid)
+          getCourseProgress(currentUser.uid),
+          getDailyPracticeLog(currentUser.uid, 30),
+          getPracticeSummary(currentUser.uid),
+          getHabitInsights(currentUser.uid),
         ]);
-        
+
         setHabitAverages(averages);
         setEntries(allEntries);
         setProgress(courseProgress);
+        setPracticeLog(log);
+        setPracticeSummary(summary);
+        setHabitInsights(insights);
       } catch (error) {
         console.error('Error loading dashboard data:', error);
       } finally {
@@ -432,8 +635,9 @@ export default function LearningDashboard() {
 
   const tabs = [
     { id: 'progress', label: 'Progress', icon: '📊' },
-    { id: 'journal', label: 'Journal', icon: '📝' },
-    { id: 'insights', label: 'Insights', icon: '💡' }
+    { id: 'practice', label: 'Practice', icon: '🪞' },
+    { id: 'journal',  label: 'Journal',  icon: '📝' },
+    { id: 'insights', label: 'Insights', icon: '💡' },
   ];
 
   return (
@@ -450,21 +654,22 @@ export default function LearningDashboard() {
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex gap-0 mb-6">
+        <div className="flex gap-0 mb-6 overflow-x-auto">
           {tabs.map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className="flex-1 py-3 text-sm font-medium transition-all relative"
+              className="flex-1 py-3 text-sm font-medium transition-all relative flex-shrink-0"
               style={{
                 color: activeTab === tab.id ? '#FFD559' : '#8BA0B2',
                 borderBottom: activeTab === tab.id
                   ? '2px solid #FFD559'
                   : '2px solid rgba(74,100,120,0.3)',
+                minWidth: '70px',
               }}
             >
-              <span className="mr-2 text-lg">{tab.icon}</span>
-              {tab.label}
+              <span className="mr-1 text-base">{tab.icon}</span>
+              <span className="text-xs">{tab.label}</span>
             </button>
           ))}
         </div>
@@ -472,25 +677,34 @@ export default function LearningDashboard() {
         {/* Tab Content */}
         <div className="min-h-[400px]">
           {activeTab === 'progress' && (
-            <ProgressTab 
-              habitAverages={habitAverages} 
-              timeRange={timeRange} 
-              setTimeRange={setTimeRange} 
+            <ProgressTab
+              habitAverages={habitAverages}
+              timeRange={timeRange}
+              setTimeRange={setTimeRange}
+              habitInsights={habitInsights}
+              onViewAllInsights={() => setActiveTab('journal')}
             />
           )}
-          
+
+          {activeTab === 'practice' && (
+            <PracticeTab
+              practiceLog={practiceLog}
+              practiceSummary={practiceSummary}
+            />
+          )}
+
           {activeTab === 'journal' && (
-            <JournalTab 
-              entries={entries} 
-              activeFilter={activeFilter} 
+            <JournalTab
+              entries={entries}
+              activeFilter={activeFilter}
               setActiveFilter={setActiveFilter}
               canAccessCompass={canAccessCompass}
             />
           )}
-          
+
           {activeTab === 'insights' && (
-            <InsightsTab 
-              habitAverages={habitAverages} 
+            <InsightsTab
+              habitAverages={habitAverages}
               entries={entries}
               progress={progress}
             />

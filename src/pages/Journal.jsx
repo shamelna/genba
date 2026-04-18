@@ -114,6 +114,8 @@ function getEntryIcon(type) {
     case 'genba-moment':           return '⬤';
     case 'stop-and-think':         return '◈';
     case 'baseline':               return '◎';
+    case 'habit-insight':          return '💡';
+    case 'daily-practice':         return '🪞';
     default:                       return '📔';
   }
 }
@@ -124,6 +126,8 @@ function getEntryAccent(type) {
     case 'stop-and-think': return '#4AB3A0';
     case 'baseline':       return '#A78BFA';
     case 'case-study-reflection': return '#60A5FA';
+    case 'habit-insight':  return '#4AB3A0';
+    case 'daily-practice': return '#8BA0B2';
     default:               return null;
   }
 }
@@ -284,6 +288,8 @@ function typeLabel(type) {
 const ALL_FILTERS = [
   { key: 'all',                   label: 'All' },
   { key: 'genba-moment',          label: 'Moments' },
+  { key: 'habit-insight',         label: 'Habit Insights' },
+  { key: 'daily-practice',        label: 'Practices' },
   { key: 'stop-and-think',        label: 'Reflections' },
   { key: 'case-study-reflection', label: 'Case Study' },
   { key: 'habit',                 label: 'Habits' },

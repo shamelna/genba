@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { caseStudies, MODULE_ORDER, MODULE_LABELS } from '../data/caseStudies';
+import { habitInsightPrompts, MODULE_1_HABITS } from '../data/habitInsightPrompts';
 import {
   saveGenbaMoment,
   saveStopAndThinkReflection,
   saveBaselineEntry,
+  saveHabitInsightEntry,
 } from '../services/firestoreService';
 import Toast from './Toast';
 
@@ -101,9 +103,16 @@ const ENTRY_TYPES = [
     description: 'Capture a real moment of leadership that connects to your Ikigai.',
   },
   {
+    id: 'habit-insight',
+    icon: '💡',
+    iconColor: '#4AB3A0',
+    label: 'Habit Insight',
+    description: 'Reflect deeply on one of the four Leading Self habits with guided prompts.',
+  },
+  {
     id: 'stop-and-think',
     icon: '◈',
-    iconColor: '#4AB3A0',
+    iconColor: '#8BA0B2',
     label: 'Reflection — Stop and Think',
     description: 'Work through your weekly module prompts from the student workbook.',
   },
@@ -474,6 +483,168 @@ function StopAndThinkForm({ onClose, onSaved, initialModule }) {
   );
 }
 
+// ── Habit Insight Form ────────────────────────────────────────────────────────
+
+const HABIT_OPTIONS = [
+  { id: 'hansei',    label: 'Hansei (Self-Reflection)',            color: '#4AB3A0' },
+  { id: 'humility',  label: 'Humility & Gratitude (Stepping Back)', color: '#FFD559' },
+  { id: 'integrity', label: 'Integrity (Keeping Commitments)',       color: '#60A5FA' },
+  { id: 'respect',   label: 'Respect & Mutual Trust (Seeing People)', color: '#F97316' },
+];
+
+function HabitInsightForm({ onClose, onSaved, initialHabit }) {
+  const { currentUser } = useAuth();
+  const [habitId, setHabitId] = useState(initialHabit || 'hansei');
+  const [answers, setAnswers] = useState({});
+  const [optionalAnswer, setOptionalAnswer] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const prompts = habitInsightPrompts[habitId];
+  const setAnswer = (i, val) => setAnswers(a => ({ ...a, [i]: val }));
+
+  const canSave = Object.values(answers).some(v => (v || '').trim()) || optionalAnswer.trim();
+
+  const handleSave = async () => {
+    if (!canSave || saving) return;
+    setSaving(true);
+    try {
+      const promptAnswers = prompts.prompts.map((p, i) => ({
+        question: p.question,
+        subText: p.subText || '',
+        answer: (answers[i] || '').trim(),
+      }));
+      if (prompts.optionalPrompt && optionalAnswer.trim()) {
+        promptAnswers.push({
+          question: prompts.optionalPrompt.question,
+          subText: '',
+          answer: optionalAnswer.trim(),
+          optional: true,
+        });
+      }
+      await saveHabitInsightEntry(
+        currentUser.uid,
+        habitId,
+        prompts.habitName,
+        prompts.entryTitle,
+        promptAnswers
+      );
+      onSaved();
+    } catch (err) {
+      console.error('Error saving Habit Insight:', err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <ModalShell onClose={onClose}>
+      <ModalHeader
+        title="Habit Insight"
+        subtitle="Guided reflection on a Leading Self habit"
+        onClose={onClose}
+      />
+      <div className="flex flex-col gap-5 p-5 pb-8">
+
+        {/* Habit selector */}
+        <div>
+          <label className="block text-gi-gold text-xs uppercase tracking-widest mb-2">
+            Which habit?
+          </label>
+          <div className="flex flex-col gap-2">
+            {HABIT_OPTIONS.map(h => (
+              <button
+                key={h.id}
+                type="button"
+                onClick={() => { setHabitId(h.id); setAnswers({}); setOptionalAnswer(''); }}
+                className="flex items-center gap-3 px-4 py-3 rounded-gi text-left text-sm transition-all"
+                style={{
+                  background: habitId === h.id ? `${h.color}15` : 'rgba(37,53,69,0.6)',
+                  border: `1px solid ${habitId === h.id ? h.color : 'rgba(74,100,120,0.4)'}`,
+                  color: habitId === h.id ? h.color : '#8BA0B2',
+                }}
+              >
+                <span
+                  className="w-4 h-4 rounded-full flex-shrink-0 border-2 flex items-center justify-center text-xs font-bold"
+                  style={{
+                    borderColor: h.color,
+                    background: habitId === h.id ? h.color : 'transparent',
+                    color: habitId === h.id ? '#1C2B3A' : 'transparent',
+                  }}
+                >
+                  {habitId === h.id ? '✓' : ''}
+                </span>
+                {h.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {prompts && (
+          <>
+            {/* Hint */}
+            <div
+              className="px-4 py-3 rounded-gi"
+              style={{ background: 'rgba(74,179,160,0.08)', border: '1px solid rgba(74,179,160,0.2)' }}
+            >
+              <p className="text-xs" style={{ color: '#4AB3A0' }}>
+                Answer one or more prompts. You can return to add more reflections anytime.
+              </p>
+            </div>
+
+            {/* Required prompts */}
+            {prompts.prompts.map((p, i) => (
+              <div key={i}>
+                <p className="text-gi-white text-sm font-medium leading-snug mb-0.5">
+                  {p.question}
+                </p>
+                {p.subText && (
+                  <p className="text-gi-mist text-xs italic mb-2">{p.subText}</p>
+                )}
+                <textarea
+                  value={answers[i] || ''}
+                  onChange={e => setAnswer(i, e.target.value)}
+                  placeholder={p.placeholder}
+                  rows={3}
+                  maxLength={600}
+                  className="w-full bg-gi-deep text-gi-white text-sm rounded-gi px-4 py-3 leading-relaxed resize-none outline-none border border-gi-slate/60 focus:border-gi-gold/50 transition-colors placeholder-gi-mist/40"
+                />
+                <div className="flex justify-end mt-1">
+                  <span className="text-gi-mist text-xs">{(answers[i] || '').length}/600</span>
+                </div>
+              </div>
+            ))}
+
+            {/* Optional prompt */}
+            {prompts.optionalPrompt && (
+              <div>
+                <p className="text-gi-mist text-sm italic leading-snug mb-2">
+                  {prompts.optionalPrompt.question}{' '}
+                  <span className="text-gi-slate text-xs not-italic">(optional)</span>
+                </p>
+                <textarea
+                  value={optionalAnswer}
+                  onChange={e => setOptionalAnswer(e.target.value)}
+                  placeholder={prompts.optionalPrompt.placeholder}
+                  rows={2}
+                  maxLength={400}
+                  className="w-full bg-gi-deep text-gi-white text-sm rounded-gi px-4 py-3 leading-relaxed resize-none outline-none border border-gi-slate/60 focus:border-gi-gold/50 transition-colors placeholder-gi-mist/40"
+                />
+              </div>
+            )}
+          </>
+        )}
+
+        <SaveButton
+          onClick={handleSave}
+          disabled={!canSave}
+          saving={saving}
+          label="Save Reflection"
+        />
+      </div>
+    </ModalShell>
+  );
+}
+
 // ── Baseline Form ─────────────────────────────────────────────────────────────
 
 const BASELINE_SLIDERS = [
@@ -636,20 +807,19 @@ function BaselineForm({ onClose, onSaved }) {
 /**
  * Props:
  *   onClose()          — called when the user closes or finishes
- *   initialType        — 'genba-moment' | 'stop-and-think' | 'baseline' | null
+ *   initialType        — 'genba-moment' | 'stop-and-think' | 'baseline' | 'habit-insight' | null
  *   initialModule      — moduleId string (used when type is 'stop-and-think')
+ *   initialHabit       — habitId string (used when type is 'habit-insight')
  */
-export default function NewEntryModal({ onClose, initialType = null, initialModule = null }) {
+export default function NewEntryModal({ onClose, initialType = null, initialModule = null, initialHabit = null }) {
   const [type, setType] = useState(initialType);
   const [toastMsg, setToastMsg] = useState(null);
 
   const handleSaved = (label) => {
     setToastMsg(label || 'Entry saved ✓');
-    // Auto-close the modal after the toast has shown briefly
     setTimeout(() => { onClose && onClose(); }, 1800);
   };
 
-  // Render toast above everything while fading out
   const toastEl = toastMsg
     ? <Toast message={toastMsg} duration={1800} onDone={() => setToastMsg(null)} />
     : null;
@@ -670,6 +840,19 @@ export default function NewEntryModal({ onClose, initialType = null, initialModu
         <GenbaMomentForm
           onClose={onClose}
           onSaved={() => handleSaved('Genba Ikigai Moment saved ✓')}
+        />
+      </>
+    );
+  }
+
+  if (type === 'habit-insight') {
+    return (
+      <>
+        {toastEl}
+        <HabitInsightForm
+          onClose={onClose}
+          onSaved={() => handleSaved('Habit Insight saved ✓')}
+          initialHabit={initialHabit}
         />
       </>
     );

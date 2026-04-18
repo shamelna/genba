@@ -9,9 +9,12 @@ import {
   getCaseStudyReflection,
   markModuleCompleted,
   saveJournalEntryWithReflection,
+  saveActReflection,
+  getActReflections,
 } from '../services/firestoreService';
 import CaseStudyScene from '../components/CaseStudyScene';
 import ReflectionPanel from '../components/ReflectionPanel';
+import ActReflectionModal from '../components/ActReflectionModal';
 
 // ── Module lock helper ──────────────────────────────────────────────────────
 function isModuleAccessible(moduleId, progress) {
@@ -83,6 +86,10 @@ export default function CaseStudyPage() {
   const [showReflectionSummary, setShowReflectionSummary] = useState(false);
   const [reviewMode, setReviewMode] = useState('story'); // 'story' | 'reflection' | 'insights'
   const [savedReflection, setSavedReflection] = useState(null);
+  // Per-act reflections (Leading Self and future modules)
+  const [showActModal, setShowActModal] = useState(false);
+  const [pendingActNumber, setPendingActNumber] = useState(null);
+  const [savedActReflections, setSavedActReflections] = useState({});
 
   const study = caseStudies[moduleId];
 
@@ -102,6 +109,12 @@ export default function CaseStudyPage() {
         if (isCompleted) {
           const reflection = await getCaseStudyReflection(currentUser.uid, moduleId);
           setSavedReflection(reflection);
+        }
+
+        // Load per-act reflections for modules that have them
+        if (study && study.perActReflections) {
+          const actRefs = await getActReflections(currentUser.uid, moduleId);
+          setSavedActReflections(actRefs);
         }
         
         if (study && !study.comingSoon && !p?.[moduleId]?.started) {
@@ -192,11 +205,7 @@ export default function CaseStudyPage() {
   const isCompleted = progress?.[moduleId]?.completed === true;
   const completionDate = progress?.[moduleId]?.completedAt;
 
-  const handleContinue = () => {
-    if (isOnLastScene) setShowReflection(true);
-    else setVisibleCount(c => Math.min(c + 1, totalScenes));
-    
-    // Immediate scroll to bottom on button click
+  const scrollToBottom = () => {
     if (threadRef.current) {
       setTimeout(() => {
         threadRef.current.scrollTo({
@@ -206,6 +215,62 @@ export default function CaseStudyPage() {
         });
       }, 50);
     }
+  };
+
+  const handleContinue = () => {
+    if (isOnLastScene) {
+      setShowReflection(true);
+      return;
+    }
+
+    // Check if the NEXT scene to reveal is a new main act (actNumber > 1)
+    // If so, show the per-act reflection modal before advancing
+    const nextScene = scenes[visibleCount]; // visibleCount = count currently shown; scenes[visibleCount] = next to show
+    if (
+      study?.perActReflections &&
+      nextScene?.actNumber &&
+      nextScene.actNumber > 1
+    ) {
+      setPendingActNumber(nextScene.actNumber - 1); // reflect on the act we just finished
+      setShowActModal(true);
+      return;
+    }
+
+    setVisibleCount(c => Math.min(c + 1, totalScenes));
+    scrollToBottom();
+  };
+
+  const handleActReflectionSave = async (answers) => {
+    if (!pendingActNumber || !study?.perActReflections) return;
+    const actData = study.perActReflections.find(a => a.actNumber === pendingActNumber);
+    if (!actData) {
+      handleActReflectionSkip();
+      return;
+    }
+    try {
+      await saveActReflection(
+        currentUser.uid,
+        moduleId,
+        actData.actNumber,
+        actData.actTitle,
+        actData.habitFocus,
+        answers
+      );
+      setSavedActReflections(prev => ({ ...prev, [pendingActNumber]: { reflectionAnswers: answers } }));
+    } catch (err) {
+      console.error('Error saving act reflection:', err);
+    }
+    setShowActModal(false);
+    setPendingActNumber(null);
+    setVisibleCount(c => Math.min(c + 1, totalScenes));
+    scrollToBottom();
+  };
+
+  const handleActReflectionSkip = () => {
+    setShowActModal(false);
+    setPendingActNumber(null);
+    setVisibleCount(c => Math.min(c + 1, totalScenes));
+    scrollToBottom();
   };
 
   const handleReflectionSave = async (answers) => {
@@ -438,6 +503,20 @@ export default function CaseStudyPage() {
         </div>
       </div>
     );
+  }
+
+  // ── Per-act reflection modal (between acts) ─────────────────────────────────
+  if (showActModal && pendingActNumber && study?.perActReflections) {
+    const actData = study.perActReflections.find(a => a.actNumber === pendingActNumber);
+    if (actData) {
+      return (
+        <ActReflectionModal
+          actReflection={actData}
+          onSave={handleActReflectionSave}
+          onSkip={handleActReflectionSkip}
+        />
+      );
+    }
   }
 
   // ── Reading view — floating chat panel on wide screens ─────────────────────

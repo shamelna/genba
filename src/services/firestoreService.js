@@ -419,6 +419,168 @@ export const getBaselineHistory = async (uid) => {
   return results;
 };
 
+// ─── Per-Act Reflection Services ──────────────────────────────────────────────
+
+// Save a per-act reflection (shown between acts in a case study)
+export const saveActReflection = async (uid, moduleId, actNumber, actTitle, habitFocus, reflectionAnswers) => {
+  const reflectionId = `${moduleId}-act${actNumber}`;
+  const reflectionRef = doc(db, 'users', uid, 'reflections', reflectionId);
+  await setDoc(reflectionRef, {
+    moduleId,
+    actNumber,
+    actTitle,
+    habitFocus,
+    reflectionAnswers,
+    createdAt: Timestamp.now(),
+  }, { merge: true });
+
+  // Also auto-create a journal entry
+  const entryId = `cs-${moduleId}-act${actNumber}-${Date.now()}`;
+  const entryRef = doc(db, 'users', uid, 'journalEntries', entryId);
+  const title = `Act ${actNumber} Reflection: ${actTitle} (${habitFocus})`;
+  const content = reflectionAnswers
+    .filter(a => a.answer && a.answer.trim())
+    .map((a, i) => `Q${i + 1}: ${a.question}\n\nA${i + 1}: ${a.answer}`)
+    .join('\n\n');
+  await setDoc(entryRef, {
+    type: 'case-study-reflection',
+    moduleId,
+    actNumber,
+    actTitle,
+    habitFocus,
+    title,
+    content,
+    reflectionAnswers,
+    userId: uid,
+    createdAt: Timestamp.now(),
+  });
+
+  return reflectionId;
+};
+
+// Get all per-act reflections for a module
+export const getActReflections = async (uid, moduleId) => {
+  const reflectionsRef = collection(db, 'users', uid, 'reflections');
+  const q = query(reflectionsRef, where('moduleId', '==', moduleId));
+  const snapshot = await getDocs(q);
+  const result = {};
+  snapshot.docs.forEach(d => {
+    const data = d.data();
+    if (data.actNumber) {
+      result[data.actNumber] = { id: d.id, ...data };
+    }
+  });
+  return result; // { 1: reflection, 2: reflection, ... }
+};
+
+// ─── Daily Practice Services ───────────────────────────────────────────────────
+
+// Get user's current practice index (0-based)
+export const getCurrentPracticeIndex = async (uid) => {
+  const summaryRef = doc(db, 'users', uid, 'practiceLog', 'summary');
+  const snapshot = await getDoc(summaryRef);
+  if (!snapshot.exists()) return 0;
+  return snapshot.data().currentPracticeIndex || 0;
+};
+
+// Mark a daily practice as complete and advance to next
+export const markPracticeComplete = async (uid, practiceData, journalEntryId = null) => {
+  const today = new Date().toISOString().split('T')[0];
+  const logRef = doc(db, 'users', uid, 'practiceLog', today);
+  await setDoc(logRef, {
+    date: today,
+    practiceId: practiceData.id,
+    practiceIndex: practiceData._index || 0,
+    habitId: practiceData.habitId,
+    habitName: practiceData.habitName,
+    prompt: practiceData.prompt,
+    completed: true,
+    completedAt: Timestamp.now(),
+    journalEntryId: journalEntryId || null,
+  }, { merge: true });
+
+  // Update summary
+  const summaryRef = doc(db, 'users', uid, 'practiceLog', 'summary');
+  const summarySnap = await getDoc(summaryRef);
+  const existing = summarySnap.exists() ? summarySnap.data() : {};
+  const currentIndex = existing.currentPracticeIndex || 0;
+  const totalCompleted = (existing.totalCompleted || 0) + 1;
+
+  await setDoc(summaryRef, {
+    currentPracticeIndex: currentIndex + 1,
+    totalCompleted,
+    lastCompletedAt: Timestamp.now(),
+    lastCompletedDate: today,
+  }, { merge: true });
+
+  return today;
+};
+
+// Save a daily practice journal entry (Stop & Think type, tagged as practice)
+export const saveDailyPracticeEntry = async (uid, practiceData, reflectionText) => {
+  const entryId = `daily-practice-${practiceData.id}-${Date.now()}`;
+  const entryRef = doc(db, 'users', uid, 'journalEntries', entryId);
+  const entry = {
+    type: 'daily-practice',
+    practiceId: practiceData.id,
+    habitId: practiceData.habitId,
+    habitName: practiceData.habitName,
+    title: `Daily Practice: ${practiceData.habitName}`,
+    prompt: practiceData.prompt,
+    content: reflectionText.trim(),
+    userId: uid,
+    createdAt: Timestamp.now(),
+  };
+  await setDoc(entryRef, entry);
+  return entryId;
+};
+
+// Get daily practice log (last N days)
+export const getDailyPracticeLog = async (uid, days = 30) => {
+  const logRef = collection(db, 'users', uid, 'practiceLog');
+  const q = query(logRef, orderBy('date', 'desc'), limit(days));
+  const snapshot = await getDocs(q);
+  return snapshot.docs
+    .filter(d => d.id !== 'summary')
+    .map(d => ({ id: d.id, ...d.data() }));
+};
+
+// Get practice summary stats
+export const getPracticeSummary = async (uid) => {
+  const summaryRef = doc(db, 'users', uid, 'practiceLog', 'summary');
+  const snapshot = await getDoc(summaryRef);
+  if (!snapshot.exists()) return { currentPracticeIndex: 0, totalCompleted: 0, lastCompletedDate: null };
+  return snapshot.data();
+};
+
+// ─── Habit Insight Services ────────────────────────────────────────────────────
+
+// Save a Habit Insight journal entry
+export const saveHabitInsightEntry = async (uid, habitId, habitName, entryTitle, promptAnswers) => {
+  const entryId = `habit-insight-${habitId}-${Date.now()}`;
+  const entryRef = doc(db, 'users', uid, 'journalEntries', entryId);
+  await setDoc(entryRef, {
+    type: 'habit-insight',
+    habitId,
+    habitName,
+    title: entryTitle,
+    promptAnswers,
+    userId: uid,
+    createdAt: Timestamp.now(),
+  });
+  return entryId;
+};
+
+// Get habit insight entries (optionally filter by habit)
+export const getHabitInsights = async (uid, habitId = null, limitCount = 20) => {
+  const entriesRef = collection(db, 'users', uid, 'journalEntries');
+  const q = query(entriesRef, orderBy('createdAt', 'desc'), limit(limitCount));
+  const snapshot = await getDocs(q);
+  return snapshot.docs
+    .map(d => ({ id: d.id, ...d.data() }))
+    .filter(e => e.type === 'habit-insight' && (!habitId || e.habitId === habitId));
+};
+
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const calculateHabitAverages = async (uid, days = 30) => {
