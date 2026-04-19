@@ -16,21 +16,7 @@ export default function Navigation() {
 
   const navItems = [
     { path: '/home', label: 'Home', icon: '🏠' },
-    { path: '/checkin', label: 'Check-in', icon: '✓' },
-    // Case Study — only for Basic (non-premium) users who have completed onboarding
-    ...(!isPremium
-      ? [{
-          path: '/case-study/introduction',
-          label: 'Case Study',
-          icon: '📖',
-          activeOverride: isCaseStudyActive,
-        }]
-      : []),
     { path: '/dashboard', label: 'Dashboard', icon: '📊' },
-    // Compass — only show to users who have access
-    ...(canAccessCompass
-      ? [{ path: '/compass', label: 'Compass', icon: '🧭' }]
-      : []),
     { path: '/journal', label: 'Journal', icon: '📔' },
     { path: '/settings', label: 'Settings', icon: '⚙️' },
   ];

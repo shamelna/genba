@@ -25,6 +25,8 @@ export default function Home() {
   const [reflectionPrompt, setReflectionPrompt] = useState('');
   // Daily practice drawer — collapsed by default so Course Journey stays hero
   const [showDaily, setShowDaily] = useState(false);
+  // Habits House — collapsed by default, sits at the bottom
+  const [showHabitsHouse, setShowHabitsHouse] = useState(false);
   const [currentModuleId, setCurrentModuleId] = useState(null);
 
   useEffect(() => {
@@ -86,18 +88,6 @@ export default function Home() {
             hero
           />
         )}
-
-        {/* ── 16 HABITS HOUSE ── */}
-        <div
-          className="mb-4 rounded-gi overflow-hidden"
-          style={{
-            background: '#1C2B3A',
-            border: '1px solid rgba(46,65,86,0.7)',
-            padding: '12px 10px 10px',
-          }}
-        >
-          <HabitsHouseInline currentModuleId={currentModuleId} />
-        </div>
 
         {/* ── DAILY MICRO-PRACTICE CARD ── */}
         <DailyPracticeCard />
@@ -258,6 +248,40 @@ export default function Home() {
               </div>
 
 
+            </div>
+          )}
+        </div>
+
+        {/* ── 16 HABITS HOUSE (collapsible, bottom of page) ── */}
+        <div className="mb-4">
+          <button
+            onClick={() => setShowHabitsHouse(v => !v)}
+            className="w-full flex items-center justify-between px-4 py-3 rounded-gi transition-colors"
+            style={{
+              background: showHabitsHouse ? '#253545' : 'transparent',
+              border: '1px solid rgba(74, 100, 120, 0.4)',
+            }}
+          >
+            <span className="text-gi-horizon text-xs uppercase tracking-widest">
+              16 Habits House
+            </span>
+            <span
+              className="text-gi-mist text-sm transition-transform duration-200"
+              style={{ transform: showHabitsHouse ? 'rotate(180deg)' : 'rotate(0deg)', display: 'inline-block' }}
+            >
+              ↓
+            </span>
+          </button>
+          {showHabitsHouse && (
+            <div
+              className="mt-2 rounded-gi overflow-hidden"
+              style={{
+                background: '#1C2B3A',
+                border: '1px solid rgba(46,65,86,0.7)',
+                padding: '12px 10px 10px',
+              }}
+            >
+              <HabitsHouseInline currentModuleId={currentModuleId} />
             </div>
           )}
         </div>

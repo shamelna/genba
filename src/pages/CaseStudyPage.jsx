@@ -83,6 +83,8 @@ export default function CaseStudyPage() {
   const [progress, setProgress] = useState(null);
   const [loadingProgress, setLoadingProgress] = useState(true);
   const [isReviewMode, setIsReviewMode] = useState(false);
+  // completedView: 'summary' | 'story' | 'reflection'
+  const [completedView, setCompletedView] = useState('summary');
   const [showReflectionSummary, setShowReflectionSummary] = useState(false);
   const [reviewMode, setReviewMode] = useState('story'); // 'story' | 'reflection' | 'insights'
   const [savedReflection, setSavedReflection] = useState(null);
@@ -505,6 +507,178 @@ export default function CaseStudyPage() {
     );
   }
 
+  // ── Module Complete Summary (shown by default when already completed) ────────
+  if (isCompleted && completedView === 'summary') {
+    const completedDateStr = completionDate
+      ? new Date(completionDate.toDate ? completionDate.toDate() : completionDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+      : null;
+
+    return (
+      <div className="min-h-screen bg-gi-deep flex flex-col">
+        {/* Header */}
+        <div
+          className="px-5 py-4 flex items-center gap-3 flex-shrink-0"
+          style={{ borderBottom: '1px solid rgba(46,65,86,0.8)', background: '#1C2B3A' }}
+        >
+          <button
+            onClick={() => navigate('/home')}
+            className="text-gi-horizon hover:text-gi-white transition-colors text-lg w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gi-slate"
+          >
+            ←
+          </button>
+          <div className="flex-1">
+            <p className="text-gi-white font-medium text-sm">{study.title}</p>
+            <p className="text-gi-horizon text-xs">{study.moduleLabel}</p>
+          </div>
+          <div
+            className="flex items-center gap-1.5 px-3 py-1 rounded-full"
+            style={{ background: 'rgba(74,179,160,0.15)', border: '1px solid rgba(74,179,160,0.3)' }}
+          >
+            <span style={{ color: '#4AB3A0', fontSize: '10px', fontWeight: 700 }}>✓</span>
+            <span className="text-xs font-medium" style={{ color: '#4AB3A0' }}>Complete</span>
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-5 py-6">
+          <div className="max-w-2xl mx-auto">
+
+            {/* Completion badge */}
+            <div
+              className="rounded-gi p-5 mb-5 flex items-center gap-4"
+              style={{ background: 'rgba(74,179,160,0.08)', border: '1px solid rgba(74,179,160,0.2)' }}
+            >
+              <div
+                className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
+                style={{ background: 'rgba(74,179,160,0.2)' }}
+              >
+                <span className="text-2xl">✓</span>
+              </div>
+              <div>
+                <p className="text-gi-white font-medium text-base">{study.moduleLabel} — Complete</p>
+                {completedDateStr && (
+                  <p className="text-gi-horizon text-sm mt-0.5">Completed {completedDateStr}</p>
+                )}
+              </div>
+            </div>
+
+            {/* Per-act reflections (if applicable) */}
+            {study.perActReflections && study.perActReflections.length > 0 && (
+              <div className="mb-5">
+                <p className="text-gi-gold text-xs uppercase tracking-widest mb-3">Act Reflections</p>
+                <div className="flex flex-col gap-3">
+                  {study.perActReflections.map((act) => {
+                    const saved = savedActReflections?.[act.actNumber];
+                    return (
+                      <div
+                        key={act.actNumber}
+                        className="rounded-gi p-4"
+                        style={{ background: '#1C2B3A', border: '1px solid rgba(46,65,86,0.8)' }}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <div>
+                            <p className="text-gi-white text-sm font-medium">Act {act.actNumber} — {act.actTitle}</p>
+                            <p className="text-gi-horizon text-xs mt-0.5">{act.habitFocus}</p>
+                          </div>
+                          {saved ? (
+                            <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: 'rgba(74,179,160,0.15)', color: '#4AB3A0', border: '1px solid rgba(74,179,160,0.3)' }}>✓ Reflected</span>
+                          ) : (
+                            <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: 'rgba(74,100,120,0.2)', color: '#7A9BB0', border: '1px solid rgba(74,100,120,0.3)' }}>Skipped</span>
+                          )}
+                        </div>
+                        {saved?.reflectionAnswers && (
+                          <div className="mt-3 flex flex-col gap-2">
+                            {act.questions.map((q, qi) => {
+                              const ans = saved.reflectionAnswers[qi];
+                              return ans ? (
+                                <div key={qi} className="text-xs" style={{ borderLeft: '2px solid rgba(74,179,160,0.3)', paddingLeft: '8px' }}>
+                                  <p className="text-gi-mist mb-0.5">{q.question}</p>
+                                  <p className="text-gi-white italic">"{ans}"</p>
+                                </div>
+                              ) : null;
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* End-of-module reflection */}
+            <div className="mb-5">
+              <p className="text-gi-gold text-xs uppercase tracking-widest mb-3">Your Module Reflection</p>
+              {savedReflection?.reflectionAnswers ? (
+                <div className="flex flex-col gap-3">
+                  {study.reflectionQuestions.map((question, i) => {
+                    const answer = savedReflection.reflectionAnswers[i]?.answer;
+                    return (
+                      <div
+                        key={i}
+                        className="rounded-gi p-4"
+                        style={{ background: '#1C2B3A', border: '1px solid rgba(46,65,86,0.8)' }}
+                      >
+                        <p className="text-gi-mist text-xs mb-2 leading-snug">{question}</p>
+                        {answer ? (
+                          <p className="text-gi-white text-sm italic">"{answer}"</p>
+                        ) : (
+                          <p className="text-gi-slate text-xs">No answer recorded</p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div
+                  className="rounded-gi p-4 text-center"
+                  style={{ background: '#1C2B3A', border: '1px solid rgba(46,65,86,0.8)' }}
+                >
+                  <p className="text-gi-mist text-sm">No reflection saved yet.</p>
+                </div>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => {
+                  setCompletedView('story');
+                  setVisibleCount(scenes.length);
+                }}
+                className="w-full py-4 rounded-gi font-semibold text-base transition-opacity hover:opacity-90"
+                style={{ background: '#253545', color: '#E8EFF5', border: '1px solid rgba(74,100,120,0.5)' }}
+              >
+                Re-read the Story
+              </button>
+              <button
+                onClick={() => {
+                  setShowReflection(true);
+                }}
+                className="w-full py-4 rounded-gi font-semibold text-base transition-opacity hover:opacity-90"
+                style={{ background: 'rgba(255,213,89,0.1)', color: '#FFD559', border: '1px solid rgba(255,213,89,0.3)' }}
+              >
+                Redo Reflection
+              </button>
+              <button
+                onClick={() => navigate('/journal')}
+                className="w-full text-gi-horizon text-sm py-2 hover:text-gi-white transition-colors"
+              >
+                View in Journal →
+              </button>
+              <button
+                onClick={() => navigate('/home')}
+                className="w-full text-gi-mist text-xs py-2 hover:text-gi-horizon transition-colors"
+              >
+                ← Back to Home
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // ── Per-act reflection modal (between acts) ─────────────────────────────────
   if (showActModal && pendingActNumber && study?.perActReflections) {
     const actData = study.perActReflections.find(a => a.actNumber === pendingActNumber);
@@ -603,9 +777,9 @@ export default function CaseStudyPage() {
         >
           <div className="flex items-center gap-3">
             <button
-              onClick={() => navigate('/home')}
+              onClick={() => isCompleted ? setCompletedView('summary') : navigate('/home')}
               className="text-gi-horizon hover:text-gi-white transition-colors text-lg leading-none w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gi-slate"
-              aria-label="Back to home"
+              aria-label="Back"
             >
               ←
             </button>
@@ -717,11 +891,10 @@ export default function CaseStudyPage() {
           {isReviewMode ? (
             <div className="flex flex-col gap-3">
               <button
-                onClick={() => setShowReflectionSummary(true)}
+                onClick={() => setCompletedView('summary')}
                 className="w-full bg-gi-gold text-gi-deep font-semibold py-4 rounded-gi hover:opacity-90 transition-opacity flex items-center justify-center gap-2 text-base"
               >
-                <span>View Your Reflection</span>
-                <span className="text-lg">→</span>
+                <span>← Back to Summary</span>
               </button>
               <button
                 onClick={() => navigate('/journal')}
