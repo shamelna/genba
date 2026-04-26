@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { getCourseProgress } from '../services/firestoreService';
 import { MODULE_ORDER, MODULE_LABELS } from '../data/caseStudies';
+import HabitsHouseInline from './HabitsHouseInline.jsx';
 
 const LeftNavigationPanel = () => {
   const { currentUser } = useAuth();
@@ -50,6 +51,11 @@ const LeftNavigationPanel = () => {
   const handleModuleClick = (moduleId) => {
     navigate(`/case-study/${moduleId}`);
   };
+
+  // Get current module ID for habits house
+  const currentModuleId = Object.keys(progress).find(moduleId => 
+    progress[moduleId]?.started && !progress[moduleId]?.completed
+  ) || MODULE_ORDER[0];
 
   const modules = MODULE_ORDER.map(moduleId => {
     const status = getModuleStatus(moduleId);
@@ -102,7 +108,7 @@ const LeftNavigationPanel = () => {
   return (
     <>
       {/* Desktop Layout */}
-      <div className="hidden lg:flex fixed left-0 top-0 h-full w-72 bg-gi-deep border-r border-gi-slate z-40">
+      <div className="hidden lg:flex fixed left-0 top-16 h-full w-72 bg-gi-deep border-r border-gi-slate z-40">
         <div className="flex flex-col h-full">
           {/* Course Journey Section */}
           <div className="flex-1 overflow-y-auto p-4">
@@ -123,6 +129,14 @@ const LeftNavigationPanel = () => {
               <div className="space-y-2">
                 {modules}
               </div>
+            </div>
+          </div>
+
+          {/* 16 Habits House Section */}
+          <div className="border-t border-gi-slate p-4">
+            <h3 className="text-gi-white text-lg font-light mb-4">16 Habits House</h3>
+            <div className="gi-card p-4">
+              <HabitsHouseInline currentModuleId={currentModuleId} />
             </div>
           </div>
 
@@ -164,7 +178,7 @@ const LeftNavigationPanel = () => {
       {/* Mobile Menu Button */}
       <button
         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-gi-slate rounded-lg"
+        className="lg:hidden fixed top-20 left-4 z-50 p-2 bg-gi-slate rounded-lg"
       >
         <span className="text-gi-white text-xl">☰</span>
       </button>
@@ -186,6 +200,14 @@ const LeftNavigationPanel = () => {
               <h3 className="text-gi-white text-lg font-light mb-4">Your Course Journey</h3>
               <div className="space-y-2">
                 {modules}
+              </div>
+            </div>
+
+            {/* Mobile 16 Habits House */}
+            <div className="border-t border-gi-slate pt-4 mb-4">
+              <h3 className="text-gi-white text-lg font-light mb-4">16 Habits House</h3>
+              <div className="gi-card p-4">
+                <HabitsHouseInline currentModuleId={currentModuleId} />
               </div>
             </div>
 
