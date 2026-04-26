@@ -5,6 +5,7 @@ import { UserTierProvider } from './contexts/UserTierContext.jsx';
 import { NotifProvider } from './contexts/NotifContext.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import GenbIkigaiWidget from './components/GenbIkigaiWidget.jsx';
+import LeftNavigationPanel from './components/LeftNavigationPanel.jsx';
 
 // Import pages
 import Login from './pages/Login.jsx';
@@ -26,53 +27,56 @@ function App() {
         <NotifProvider>
           <Router>
             <div className="min-h-screen bg-gi-deep">
-              <Routes>
-                <Route path="/login" element={<Login />} />
-                
-                <Route 
-                  path="/onboarding" 
-                  element={<ProtectedRoute><Onboarding /></ProtectedRoute>}
-                />
-                <Route 
-                  path="/home" 
-                  element={<ProtectedRoute><Home /></ProtectedRoute>}
-                />
-                <Route 
-                  path="/checkin" 
-                  element={<ProtectedRoute><CheckIn /></ProtectedRoute>}
-                />
-                <Route 
-                  path="/progress" 
-                  element={<ProtectedRoute><Progress /></ProtectedRoute>}
-                />
-                <Route 
-                  path="/dashboard" 
-                  element={<ProtectedRoute><LearningDashboard /></ProtectedRoute>}
-                />
-                <Route 
-                  path="/compass" 
-                  element={<ProtectedRoute requirePremium={true}><Compass /></ProtectedRoute>}
-                />
-                <Route 
-                  path="/journal" 
-                  element={<ProtectedRoute><Journal /></ProtectedRoute>}
-                />
-                <Route 
-                  path="/settings" 
-                  element={<ProtectedRoute><Settings /></ProtectedRoute>}
-                />
-                <Route 
-                  path="/admin" 
-                  element={<ProtectedRoute requireAdmin={true}><Admin /></ProtectedRoute>}
-                />
-                
-                <Route
-                  path="/case-study/:moduleId"
-                  element={<ProtectedRoute><CaseStudyPage /></ProtectedRoute>}
-                />
+              <LeftNavigationPanel />
+              <div className="flex-1 overflow-hidden">
+                <Routes>
+                  <Route path="/login" element={<Login />} />
+                  
+                  <Route 
+                    path="/onboarding" 
+                    element={<ProtectedRoute><Onboarding /></ProtectedRoute>}
+                  />
+                  <Route 
+                    path="/home" 
+                    element={<ProtectedRoute><Home /></ProtectedRoute>}
+                  />
+                  <Route 
+                    path="/checkin" 
+                    element={<ProtectedRoute><CheckIn /></ProtectedRoute>}
+                  />
+                  <Route 
+                    path="/progress" 
+                    element={<ProtectedRoute><Progress /></ProtectedRoute>}
+                  />
+                  <Route 
+                    path="/dashboard" 
+                    element={<ProtectedRoute><LearningDashboard /></ProtectedRoute>}
+                  />
+                  <Route 
+                    path="/compass" 
+                    element={<ProtectedRoute requirePremium={true}><Compass /></ProtectedRoute>}
+                  />
+                  <Route 
+                    path="/journal" 
+                    element={<ProtectedRoute><Journal /></ProtectedRoute>}
+                  />
+                  <Route 
+                    path="/settings" 
+                    element={<ProtectedRoute><Settings /></ProtectedRoute>}
+                  />
+                  <Route 
+                    path="/admin" 
+                    element={<ProtectedRoute requireAdmin={true}><Admin /></ProtectedRoute>}
+                  />
+                  
+                  <Route
+                    path="/case-study/:moduleId"
+                    element={<ProtectedRoute><CaseStudyPage /></ProtectedRoute>}
+                  />
 
-                <Route path="/" element={<Navigate to="/home" replace />} />
-              </Routes>
+                  <Route path="/" element={<Navigate to="/home" replace />} />
+                </Routes>
+              </div>
               <GenbIkigaiWidget />
             </div>
           </Router>
