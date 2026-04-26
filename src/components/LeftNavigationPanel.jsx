@@ -3,7 +3,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { getCourseProgress } from '../services/firestoreService';
 import { MODULE_ORDER, MODULE_LABELS } from '../data/caseStudies';
-import HabitsHouseInline from './HabitsHouseInline.jsx';
 
 const LeftNavigationPanel = () => {
   const { currentUser } = useAuth();
@@ -136,7 +135,19 @@ const LeftNavigationPanel = () => {
           <div className="border-t border-gi-slate p-4">
             <h3 className="text-gi-white text-lg font-light mb-4">16 Habits House</h3>
             <div className="gi-card p-4">
-              <HabitsHouseInline currentModuleId={currentModuleId} />
+              <button
+                onClick={() => navigate('/home')}
+                className="w-full flex items-center justify-between text-left hover:bg-gi-slate/50 p-2 rounded transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-lg">🏠</span>
+                  <div>
+                    <div className="text-sm font-medium text-gi-white">View 16 Habits House</div>
+                    <div className="text-xs text-gi-horizon">Current module habits</div>
+                  </div>
+                </div>
+                <span className="text-gi-mist">→</span>
+              </button>
             </div>
           </div>
 
@@ -207,7 +218,19 @@ const LeftNavigationPanel = () => {
             <div className="border-t border-gi-slate pt-4 mb-4">
               <h3 className="text-gi-white text-lg font-light mb-4">16 Habits House</h3>
               <div className="gi-card p-4">
-                <HabitsHouseInline currentModuleId={currentModuleId} />
+                <button
+                  onClick={() => navigate('/home')}
+                  className="w-full flex items-center justify-between text-left hover:bg-gi-slate/50 p-2 rounded transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-lg">🏠</span>
+                    <div>
+                      <div className="text-sm font-medium text-gi-white">View 16 Habits House</div>
+                      <div className="text-xs text-gi-horizon">Current module habits</div>
+                    </div>
+                  </div>
+                  <span className="text-gi-mist">→</span>
+                </button>
               </div>
             </div>
 
