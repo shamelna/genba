@@ -56,7 +56,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gi-deep pt-16 pb-6">
-      <div className="px-4 pt-6 pb-2 max-w-4xl mx-auto">
+      <div className="px-4 pt-6 pb-2 max-w-6xl mx-auto">
         {/* Greeting */}
         <p className="text-gi-horizon text-sm uppercase tracking-widest mb-1">
           {greeting}
@@ -64,14 +64,6 @@ export default function Home() {
         <h1 className="text-2xl font-light text-gi-white mb-8 tracking-wide">
           {getFirstName(currentUser?.displayName)}
         </h1>
-
-        {/* 16 Habits House */}
-        <div className="mb-8">
-          <h2 className="text-lg font-light text-gi-white mb-4">16 Habits House</h2>
-          <div className="gi-card p-6">
-            <HabitsHouseInline currentModuleId={currentModuleId} />
-          </div>
-        </div>
 
         {/* Current Module Progress */}
         {currentModuleId && (
@@ -139,7 +131,7 @@ export default function Home() {
         </div>
 
         {/* Coming Soon Section */}
-        <div className="gi-card p-6">
+        <div className="gi-card p-6 mb-8">
           <h2 className="text-lg font-light text-gi-white mb-4">Coming Up</h2>
           <div className="space-y-3">
             {MODULE_ORDER.filter(moduleId => !progress[moduleId]?.started).slice(0, 3).map(moduleId => (
@@ -151,6 +143,18 @@ export default function Home() {
                 <span className="text-gi-mist text-sm">Locked</span>
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* 16 Habits House - Moved to bottom with more width */}
+        <div className="mb-8">
+          <h2 className="text-lg font-light text-gi-white mb-4">16 Habits House</h2>
+          <div className="gi-card p-6">
+            <div className="w-full overflow-x-auto">
+              <div className="min-w-max">
+                <HabitsHouseInline currentModuleId={currentModuleId} />
+              </div>
+            </div>
           </div>
         </div>
       </div>

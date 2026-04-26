@@ -33,7 +33,7 @@ function App() {
               
               <div className="flex pt-16"> {/* Add padding for header */}
                 <LeftNavigationPanel />
-                <div className="flex-1 overflow-hidden">
+                <div className="flex-1 overflow-hidden ml-72"> {/* Add margin for left panel */}
                   <Routes>
                     <Route path="/login" element={<Login />} />
                     
