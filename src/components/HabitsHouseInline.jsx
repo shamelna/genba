@@ -122,7 +122,7 @@ function HabitTile({ habit, isActive, isHighlighted, onEnter, onLeave, onTap }) 
         background: isActive ? '#3A5269' : isHighlighted ? 'rgba(255,213,89,0.08)' : '#253545',
         border: `1px solid ${isActive ? '#FFD559' : isHighlighted ? 'rgba(255,213,89,0.4)' : '#3A5269'}`,
         borderRadius: 7,
-        padding: '5px 5px',
+        padding: '8px 8px',
         cursor: 'pointer',
         transition: 'background 0.12s, border-color 0.12s',
         boxShadow: isActive ? '0 0 8px rgba(255,213,89,0.25)' : isHighlighted ? '0 0 5px rgba(255,213,89,0.1)' : 'none',
@@ -130,11 +130,11 @@ function HabitTile({ habit, isActive, isHighlighted, onEnter, onLeave, onTap }) 
         textAlign: 'center',
       }}
     >
-      <div style={{ fontSize: 13, lineHeight: 1, marginBottom: 2 }}>{habit.icon}</div>
-      <div style={{ fontSize: 7.5, color: '#FFD559', fontWeight: 700, letterSpacing: '0.05em', marginBottom: 1 }}>
+      <div style={{ fontSize: 16, lineHeight: 1, marginBottom: 3 }}>{habit.icon}</div>
+      <div style={{ fontSize: 8.5, color: '#FFD559', fontWeight: 700, letterSpacing: '0.05em', marginBottom: 2 }}>
         #{habit.id}
       </div>
-      <div style={{ fontSize: 8, color: '#C8D8E4', lineHeight: 1.3, whiteSpace: 'pre-line' }}>
+      <div style={{ fontSize: 9, color: '#C8D8E4', lineHeight: 1.3, whiteSpace: 'pre-line' }}>
         {habit.label}
       </div>
     </div>
@@ -202,7 +202,7 @@ function CultureCircle({ habits, onEnter, onLeave, onTap, activeId, isHighlighte
       <div style={{
         display: 'grid',
         gridTemplateColumns: '1fr 1fr',
-        gap: 3,
+        gap: 6,
         position: 'relative', zIndex: 1,
       }}>
         {order.map(q => {
@@ -263,8 +263,8 @@ export default function HabitsHouseInline({ currentModuleId }) {
 
   return (
     <>
-      {/* ── Constrained-width house ── */}
-      <div style={{ maxWidth: 408, margin: '0 auto' }}>
+      {/* ── Full-width house ── */}
+      <div style={{ maxWidth: 600, margin: '0 auto', width: '100%' }}>
 
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 7 }}>

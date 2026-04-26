@@ -146,14 +146,12 @@ export default function Home() {
           </div>
         </div>
 
-        {/* 16 Habits House - Moved to bottom with more width */}
+        {/* 16 Habits House - Full width utilization */}
         <div className="mb-8">
           <h2 className="text-lg font-light text-gi-white mb-4">16 Habits House</h2>
-          <div className="gi-card p-6">
-            <div className="w-full overflow-x-auto">
-              <div className="min-w-max">
-                <HabitsHouseInline currentModuleId={currentModuleId} />
-              </div>
+          <div className="gi-card p-8">
+            <div className="w-full">
+              <HabitsHouseInline currentModuleId={currentModuleId} />
             </div>
           </div>
         </div>

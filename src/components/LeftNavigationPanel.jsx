@@ -107,7 +107,7 @@ const LeftNavigationPanel = () => {
   return (
     <>
       {/* Desktop Layout */}
-      <div className="hidden lg:flex fixed left-0 top-16 h-full w-72 bg-gi-deep border-r border-gi-slate z-40">
+      <div className="hidden lg:flex fixed left-0 top-16 h-full w-72 bg-gi-deep border-r border-gi-slate z-30" style={{ position: 'fixed', left: 0, top: '4rem', zIndex: 30 }}>
         <div className="flex flex-col h-full">
           {/* Course Journey Section */}
           <div className="flex-1 overflow-y-auto p-4">
@@ -189,7 +189,7 @@ const LeftNavigationPanel = () => {
       {/* Mobile Menu Button */}
       <button
         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        className="lg:hidden fixed top-20 left-4 z-50 p-2 bg-gi-slate rounded-lg"
+        className="lg:hidden fixed top-20 left-4 z-40 p-2 bg-gi-slate rounded-lg"
       >
         <span className="text-gi-white text-xl">☰</span>
       </button>

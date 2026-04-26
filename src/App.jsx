@@ -7,6 +7,7 @@ import ProtectedRoute from './components/ProtectedRoute.jsx';
 import GenbIkigaiWidget from './components/GenbIkigaiWidget.jsx';
 import LeftNavigationPanel from './components/LeftNavigationPanel.jsx';
 import Navigation from './components/Navigation.jsx';
+import heroImage from '../assets/hero-book-floating-water.jpg';
 
 // Import pages
 import Login from './pages/Login.jsx';
@@ -27,14 +28,19 @@ function App() {
       <UserTierProvider>
         <NotifProvider>
           <Router>
-            <div className="min-h-screen bg-gi-deep">
+            <div className="min-h-screen bg-gi-deep relative">
+              {/* Background Image - behind cards with subtle overlay */}
+              <div 
+                className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-30"
+                style={{ backgroundImage: `url(${heroImage})` }}
+              />
+              
               {/* Always show header navigation */}
               <Navigation />
               
-              <div className="flex pt-16"> {/* Add padding for header */}
-                <LeftNavigationPanel />
-                <div className="flex-1 overflow-hidden ml-72"> {/* Add margin for left panel */}
-                  <Routes>
+              {/* Main content area */}
+              <div className="pt-16 ml-0 lg:ml-72 min-h-screen relative z-10">
+                <Routes>
                     <Route path="/login" element={<Login />} />
                     
                     <Route 
@@ -80,11 +86,13 @@ function App() {
                     />
 
                     <Route path="/" element={<Navigate to="/home" replace />} />
-                  </Routes>
-                </div>
+                </Routes>
               </div>
               <GenbIkigaiWidget />
             </div>
+            
+            {/* Left navigation panel - positioned at body level */}
+            <LeftNavigationPanel />
           </Router>
         </NotifProvider>
       </UserTierProvider>
